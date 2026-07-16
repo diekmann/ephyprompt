@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EphyPrompt</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #0b57d0;
+      --accent-soft: #e8f0ff;
+      --warning: #fff3cd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 300px;
+      padding: 14px;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .banner {
+      font-size: 13px;
+      line-height: 1.4;
+      background: var(--warning);
+      border: 1px solid #ffe69c;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .image-selection-list {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    select,
+    input[type="file"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--panel);
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    button.secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      background: var(--panel-2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble {
+      max-width: min(760px, 100%);
+      padding: 10px 12px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: white;
+    }
+
+    .bubble.assistant {
+      align-self: flex-start;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+
+    .bubble-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+
+    .bubble.user .bubble-label {
+      color: rgba(255, 255, 255, .8);
+    }
+
+    .attachment-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      color: inherit;
+      font-size: 13px;
+      line-height: 1.2;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .attachment-chip .attachment-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .thinking {
+      display: none;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--muted);
+      border-left: 3px solid #bfdbfe;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .thinking.visible {
+      display: block;
+    }
+
+    .assistant-status {
+      display: none;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .assistant-status.visible {
+      display: inline-flex;
+    }
+
+    .assistant-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .composer {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .composer textarea {
+      min-height: 64px;
+      resize: vertical;
+    }
+
+    @media (max-width: 800px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="banner">
+      Local EphyPrompt<br />
+      such privacy, much security, wow
+    </div>
+
+    <label class="field">
+      <span>Model</span>
+      <select id="model"></select>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" id="thinking" checked />
+      <span>Thinking</span>
+    </label>
+
+    <label class="field">
+      <span>Images (allows selecting multiple)</span>
+      <input type="file" id="image" accept="image/*" multiple />
+      <div id="image-selection" class="image-selection-list" hidden></div>
+    </label>
+
+    <label class="field">
+      <span>PDF (rasterized and attached as images)</span>
+      <input type="file" id="pdf" accept="application/pdf" />
+      <div id="pdf-status" class="image-selection-list" hidden></div>
+    </label>
+
+    <label class="field">
+      <span>PDF rasterization DPI</span>
+      <select id="pdf-dpi">
+        <option value="72">72 (default, small)</option>
+        <option value="100">100</option>
+        <option value="150">150 (medium)</option>
+        <option value="200">200</option>
+        <option value="300">300 (high)</option>
+      </select>
+    </label>
+
+    <button type="button" id="clear" class="secondary">Clear</button>
+  </aside>
+
+  <main class="chat">
+    <div id="messages" class="messages" aria-live="polite"></div>
+    <form id="composer" class="composer">
+      <textarea id="input" placeholder="Was geht bei dir so, digga?">Was geht bei dir so, digga?</textarea>
+      <button type="submit">Send</button>
+    </form>
+  </main>
+
+  <script>
+    const MODEL_OPTIONS = [
+      { id: "deepseek/deepseek-v4-flash", label: "DeepSeek V4 Flash (günstig)", supportsImages: false },
+      { id: "openai/gpt-oss-120b", label: "OpenAI GPT-OSS 120B (sehr günstig)", supportsImages: false },
+      { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false },
+      { id: "z-ai/glm-5.2", label: "Z-AI GLM-5.2", supportsImages: false },
+      { id: "minimax/minimax-m3", label: "Minimax M3 (bilder)", supportsImages: true },
+      { id: "moonshotai/kimi-k2.6", label: "Moonshot K2.6 (bilder)", supportsImages: true },
+      { id: "qwen/qwen3-vl-235b-a22b-instruct", label: "Qwen VL 235B (bilder)", supportsImages: true }
+    ];
+
+    const elements = {
+      model: document.getElementById("model"),
+      thinking: document.getElementById("thinking"),
+      image: document.getElementById("image"),
+      imageSelection: document.getElementById("image-selection"),
+      pdf: document.getElementById("pdf"),
+      pdfStatus: document.getElementById("pdf-status"),
+      pdfDpi: document.getElementById("pdf-dpi"),
+      clear: document.getElementById("clear"),
+      messages: document.getElementById("messages"),
+      composer: document.getElementById("composer"),
+      input: document.getElementById("input")
+    };
+
+    let messages = [];
+
+    function logDebug(message, detail) {
+      console.log("[ephyprompt]", message, detail ?? "");
+    }
+
+    function populateModelOptions() {
+      elements.model.innerHTML = "";
+      for (const model of MODEL_OPTIONS) {
+        const option = document.createElement("option");
+        option.value = model.id;
+        option.textContent = model.label;
+        elements.model.appendChild(option);
+      }
+      elements.model.value = MODEL_OPTIONS[0].id;
+      updateImageControls();
+    }
+
+    function updateImageControls() {
+      const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
+      const supportsImages = Boolean(model?.supportsImages);
+      elements.image.disabled = !supportsImages;
+      elements.image.style.opacity = supportsImages ? "1" : "0.5";
+      elements.image.title = supportsImages
+        ? "Attach one or more images"
+        : "Image uploads are not available for the selected model";
+      elements.pdf.disabled = !supportsImages;
+      elements.pdf.style.opacity = supportsImages ? "1" : "0.5";
+      elements.pdf.title = supportsImages
+        ? "Upload a PDF; each page will be rasterized to a JPG on the proxy"
+        : "Image uploads are not available for the selected model";
+    }
+
+    function createBubble(role, text, attachments = []) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`;
+
+      const label = document.createElement("div");
+      label.className = "bubble-label";
+      label.textContent = role.toUpperCase();
+      bubble.appendChild(label);
+
+      if (role === "assistant") {
+        const thinking = document.createElement("div");
+        thinking.className = "thinking";
+        bubble.appendChild(thinking);
+
+        const status = document.createElement("div");
+        status.className = "assistant-status visible";
+        status.innerHTML = '<span class="dot"></span><span>Thinking…</span>';
+        bubble.appendChild(status);
+
+        const content = document.createElement("div");
+        bubble.appendChild(content);
+
+        elements.messages.appendChild(bubble);
+        bubble.scrollIntoView({ behavior: "smooth", block: "end" });
+        return { bubble, thinking, content, status };
+      }
+
+      const body = document.createElement("div");
+      if (text) {
+        body.textContent = text;
+      }
+
+      if (attachments.length > 0) {
+        const attachmentLabel = document.createElement("div");
+        attachmentLabel.className = "attachment-chip";
+        attachmentLabel.innerHTML = `🖼️ <span class="attachment-name">${attachments.map((file) => file.name).join(", ")}</span>`;
+        body.appendChild(attachmentLabel);
+      }
+
+      if (!text && attachments.length === 0) {
+        body.textContent = "[empty]";
+      }
+
+      bubble.appendChild(body);
+
+      elements.messages.appendChild(bubble);
+      bubble.scrollIntoView({ behavior: "smooth", block: "end" });
+      return { bubble };
+    }
+
+    function updateAssistantBubble(assistantBubble, { content, thinking, loading }) {
+      if (thinking !== undefined) {
+        assistantBubble.thinking.textContent = thinking;
+        assistantBubble.thinking.classList.toggle("visible", Boolean(thinking));
+      }
+      if (content !== undefined) {
+        assistantBubble.content.textContent = content;
+      }
+      if (loading !== undefined) {
+        assistantBubble.status.classList.toggle("visible", loading);
+        assistantBubble.status.innerHTML = loading
+          ? '<span class="dot"></span><span>Thinking…</span>'
+          : '';
+      }
+    }
+
+    function clearChat() {
+      messages = [];
+      elements.messages.innerHTML = "";
+      logDebug("Chat cleared");
+    }
+
+    function updateImageSelectionSummary() {
+      const files = Array.from(elements.image.files || []);
+      if (files.length === 0) {
+        elements.imageSelection.textContent = "No images selected";
+        elements.imageSelection.hidden = true;
+        return;
+      }
+
+      elements.imageSelection.hidden = false;
+      elements.imageSelection.textContent = files.map((file) => file.name).join(", ");
+    }
+
+    function clearSelectedImages() {
+      elements.image.value = "";
+      updateImageSelectionSummary();
+    }
+
+    function setPdfStatus(text) {
+      if (!text) {
+        elements.pdfStatus.hidden = true;
+        elements.pdfStatus.textContent = "";
+        return;
+      }
+      elements.pdfStatus.hidden = false;
+      elements.pdfStatus.textContent = text;
+    }
+
+    function base64ToFile(b64, name, mimeType) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new File([bytes], name, { type: mimeType });
+    }
+
+    function appendFilesToImageInput(files) {
+      const dt = new DataTransfer();
+      for (const existing of Array.from(elements.image.files || [])) {
+        dt.items.add(existing);
+      }
+      for (const file of files) {
+        dt.items.add(file);
+      }
+      elements.image.files = dt.files;
+      updateImageSelectionSummary();
+    }
+
+    async function handlePdfSelected(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
+      if (!modelConfig?.supportsImages) {
+        alert("The selected model does not support image uploads.");
+        elements.pdf.value = "";
+        return;
+      }
+
+      setPdfStatus(`Rasterizing ${file.name}…`);
+      elements.pdf.disabled = true;
+
+      try {
+        const dpi = parseInt(elements.pdfDpi.value, 10) || 72;
+        const response = await fetch("http://localhost:3000/rasterize-pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/pdf",
+            "X-Filename": file.name,
+            "X-DPI": String(dpi)
+          },
+          body: file
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        const pages = Array.isArray(result?.pages) ? result.pages : [];
+        if (pages.length === 0) {
+          throw new Error("Proxy returned no pages");
+        }
+
+        const jpgFiles = pages.map((page) => base64ToFile(page.data, page.name, "image/jpeg"));
+        appendFilesToImageInput(jpgFiles);
+
+        setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name}`);
+        logDebug("PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
+      } catch (error) {
+        logDebug("PDF rasterization failed", { error: error.message });
+        setPdfStatus(`Failed to rasterize ${file.name}: ${error.message}`);
+        alert(`Failed to rasterize PDF: ${error.message}`);
+      } finally {
+        elements.pdf.value = "";
+        elements.pdf.disabled = false;
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function buildImageContent(files, text) {
+      const parts = [];
+      if (text) parts.push({ type: "text", text });
+      for (const file of files) {
+        parts.push({ type: "image_url", image_url: { url: await fileToBase64(file) } });
+      }
+      return parts;
+    }
+
+    /**
+     * Build the messages array for the API request.
+     *
+     * Images are only sent on the message they were first attached to (the
+     * last user message).  All previous messages have their image data
+     * stripped so we don't re-send large base64 payloads on every turn.
+     */
+    function buildApiMessages(allMessages) {
+      const lastIndex = allMessages.length - 1;
+      return allMessages.map((message, index) => {
+        // Keep the current message (last in the array) unchanged so its
+        // images are transmitted this once.
+        if (index === lastIndex) {
+          return message;
+        }
+        // For every previous message, strip image_url parts and keep only
+        // the text so we don't re-send base64 image data.
+        if (Array.isArray(message.content)) {
+          const text = message.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join("");
+          return { ...message, content: text || "[image previously shared]" };
+        }
+        return message;
+      });
+    }
+
+    function processSSEBuffer(buffer, onEvent) {
+      const chunks = buffer.split("\n\n");
+      const remainder = chunks.pop() || "";
+
+      for (const chunk of chunks) {
+        let dataLine = "";
+        for (const line of chunk.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed.startsWith("data:")) dataLine = trimmed.slice(5).trim();
+        }
+
+        if (!dataLine) continue;
+        if (dataLine === "[DONE]") {
+          logDebug("Stream finished");
+          continue;
+        }
+
+        try {
+          onEvent(JSON.parse(dataLine));
+        } catch (error) {
+          logDebug("Failed to parse SSE payload", { dataLine, error: error.message });
+        }
+      }
+
+      return remainder;
+    }
+
+    async function send(event) {
+      event?.preventDefault();
+
+      const text = elements.input.value.trim();
+      const model = elements.model.value;
+      const thinkingEnabled = elements.thinking.checked;
+      const imageFiles = Array.from(elements.image.files || []);
+      const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === model);
+
+      if (imageFiles.length > 0 && !modelConfig?.supportsImages) {
+        alert("The selected model does not support image uploads.");
+        return;
+      }
+
+      const content = imageFiles.length > 0
+        ? await buildImageContent(imageFiles, text || "Describe these images")
+        : text;
+
+      clearSelectedImages();
+      messages.push({ role: "user", content });
+      createBubble("user", text || "", imageFiles);
+
+      logDebug("Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
+
+      const assistantBubble = createBubble("assistant");
+
+      let response;
+      try {
+        response = await fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+          body: JSON.stringify({
+            model,
+            messages: buildApiMessages(messages),
+            stream: true,
+            chat_template_kwargs: { enable_thinking: thinkingEnabled, thinking: thinkingEnabled }
+          })
+        });
+      } catch (error) {
+        updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
+        return;
+      }
+
+      logDebug("Received response", { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logDebug("Request failed", { status: response.status, body: errorText });
+        updateAssistantBubble(assistantBubble, { content: `ERROR: ${errorText}`, thinking: false, loading: false });
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        updateAssistantBubble(assistantBubble, { content: "ERROR: response body is not readable", thinking: false, loading: false });
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let assistantText = "";
+      let assistantThinking = "";
+      let sseBuffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        sseBuffer = processSSEBuffer(sseBuffer + chunk, (event) => {
+          const contentDelta = event.choices?.[0]?.delta?.content;
+          if (contentDelta) {
+            assistantText += contentDelta;
+            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+          }
+
+          const thinkingDelta = event.choices?.[0]?.delta?.reasoning_content ?? event.choices?.[0]?.delta?.reasoning;
+          if (thinkingDelta) {
+            assistantThinking += thinkingDelta;
+            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+          }
+        });
+      }
+
+      const finalChunk = decoder.decode();
+      if (finalChunk) {
+        sseBuffer = processSSEBuffer(sseBuffer + finalChunk, (event) => {
+          const contentDelta = event.choices?.[0]?.delta?.content;
+          if (contentDelta) {
+            assistantText += contentDelta;
+            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+          }
+
+          const thinkingDelta = event.choices?.[0]?.delta?.reasoning_content ?? event.choices?.[0]?.delta?.reasoning;
+          if (thinkingDelta) {
+            assistantThinking += thinkingDelta;
+            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+          }
+        });
+      }
+
+      const reply = assistantText || "(no response)";
+      updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
+      messages.push({ role: "assistant", content: reply });
+      elements.input.value = "";
+      logDebug("Chat response completed", { reply });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      populateModelOptions();
+      elements.model.addEventListener("change", updateImageControls);
+      elements.image.addEventListener("change", updateImageSelectionSummary);
+      elements.pdf.addEventListener("change", handlePdfSelected);
+      elements.clear.addEventListener("click", clearChat);
+      elements.composer.addEventListener("submit", send);
+      elements.input.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+          event.preventDefault();
+          send(event);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
