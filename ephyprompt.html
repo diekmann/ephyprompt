@@ -106,6 +106,11 @@
       border: 1px solid var(--border);
     }
 
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .chat {
       flex: 1;
       display: flex;
@@ -227,6 +232,20 @@
       }
     }
 
+    .pdf-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pdf-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1s infinite ease-in-out;
+    }
+
     .composer {
       display: flex;
       gap: 8px;
@@ -280,7 +299,7 @@
     <label class="field">
       <span>PDF (rasterized and attached as images)</span>
       <input type="file" id="pdf" accept="application/pdf" />
-      <div id="pdf-status" class="image-selection-list" hidden></div>
+      <div id="pdf-status" class="image-selection-list pdf-status" hidden></div>
     </label>
 
     <label class="field">
@@ -301,7 +320,7 @@
     <div id="messages" class="messages" aria-live="polite"></div>
     <form id="composer" class="composer">
       <textarea id="input" placeholder="Was geht bei dir so, digga?">Was geht bei dir so, digga?</textarea>
-      <button type="submit">Send</button>
+      <button type="submit" id="send">Send</button>
     </form>
   </main>
 
@@ -327,7 +346,8 @@
       clear: document.getElementById("clear"),
       messages: document.getElementById("messages"),
       composer: document.getElementById("composer"),
-      input: document.getElementById("input")
+      input: document.getElementById("input"),
+      send: document.getElementById("send")
     };
 
     let messages = [];
@@ -452,14 +472,18 @@
       updateImageSelectionSummary();
     }
 
-    function setPdfStatus(text) {
+    function setPdfStatus(text, loading = false) {
       if (!text) {
         elements.pdfStatus.hidden = true;
-        elements.pdfStatus.textContent = "";
+        elements.pdfStatus.innerHTML = "";
         return;
       }
       elements.pdfStatus.hidden = false;
-      elements.pdfStatus.textContent = text;
+      if (loading) {
+        elements.pdfStatus.innerHTML = `<span class="dot"></span><span>${text}</span>`;
+      } else {
+        elements.pdfStatus.textContent = text;
+      }
     }
 
     function base64ToFile(b64, name, mimeType) {
@@ -494,8 +518,9 @@
         return;
       }
 
-      setPdfStatus(`Rasterizing ${file.name}…`);
+      setPdfStatus(`Rasterizing ${file.name}…`, true);
       elements.pdf.disabled = true;
+      elements.send.disabled = true;
 
       try {
         const dpi = parseInt(elements.pdfDpi.value, 10) || 72;
@@ -532,6 +557,7 @@
       } finally {
         elements.pdf.value = "";
         elements.pdf.disabled = false;
+        elements.send.disabled = false;
       }
     }
 
@@ -726,7 +752,9 @@
       elements.input.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           event.preventDefault();
-          send(event);
+          if (!elements.send.disabled) {
+            send(event);
+          }
         }
       });
     });
