@@ -35,3 +35,13 @@ With a vision model, it can handle pdf (via brute-force, rendering each page as 
 * Since EphyPrompt shall run without external dependencies, we cannot `npm install openai` or `import OpenAI from "openai";`.
 * Due to above, EphyPrompt is not using the official openai javascrip module, but only uses raw `fetch` (and `FormData` for file upload).
 * Unfortunately, the tensorX API doesn't accept requests from the browser directly. Okay, this is actually a very good choice, since it prevents insecure setups which expose the API key to the client browser (which would be a feature in EphyPrompt, but is normally a very bad design). So we need a local proxy to resend the request to the API.
+
+## Usage
+
+```sh
+podman build -t ephyprompt .
+```
+
+```sh
+podman run --rm -it -p 127.0.0.1:3000:3000 -e OPENAI_API_KEY=XXX ephyprompt
+```
