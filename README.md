@@ -43,5 +43,5 @@ podman build -t ephyprompt .
 ```
 
 ```sh
-podman run --rm -it -p 127.0.0.1:3000:3000 -e OPENAI_API_KEY=XXX ephyprompt
+podman run --rm -it --network host -e OPENAI_API_KEY=XXX ephyprompt
 ```
