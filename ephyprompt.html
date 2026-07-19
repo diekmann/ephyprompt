@@ -382,37 +382,23 @@
         : "Image uploads are not available for the selected model";
     }
 
-    function createBubble(role, text, attachments = []) {
+    function createBubble(role) {
       const bubble = document.createElement("div");
       bubble.className = `bubble ${role}`;
 
       const label = document.createElement("div");
       label.className = "bubble-label";
       label.textContent = role.toUpperCase();
+
       bubble.appendChild(label);
+      return bubble;
+    }
 
-      if (role === "assistant") {
-        const thinking = document.createElement("div");
-        thinking.className = "thinking";
-        bubble.appendChild(thinking);
-
-        const status = document.createElement("div");
-        status.className = "assistant-status visible";
-        status.innerHTML = '<span class="dot"></span><span>Thinking…</span>';
-        bubble.appendChild(status);
-
-        const content = document.createElement("div");
-        bubble.appendChild(content);
-
-        elements.messages.appendChild(bubble);
-        bubble.scrollIntoView({ behavior: "smooth", block: "end" });
-        return { bubble, thinking, content, status };
-      }
-
+    function createUserBubble(text = "", attachments = []) {
+      const bubble = createBubble("user");
       const body = document.createElement("div");
-      if (text) {
-        body.textContent = text;
-      }
+
+      body.textContent = text || "[empty]";
 
       if (attachments.length > 0) {
         const attachmentLabel = document.createElement("div");
@@ -421,15 +407,30 @@
         body.appendChild(attachmentLabel);
       }
 
-      if (!text && attachments.length === 0) {
-        body.textContent = "[empty]";
-      }
-
       bubble.appendChild(body);
-
       elements.messages.appendChild(bubble);
       bubble.scrollIntoView({ behavior: "smooth", block: "end" });
+
       return { bubble };
+    }
+
+    function createAssistantBubble() {
+      const bubble = createBubble("assistant");
+
+      const thinking = document.createElement("div");
+      thinking.className = "thinking";
+
+      const status = document.createElement("div");
+      status.className = "assistant-status visible";
+      status.innerHTML = '<span class="dot"></span><span>Thinking…</span>';
+
+      const content = document.createElement("div");
+
+      bubble.append(thinking, status, content);
+      elements.messages.appendChild(bubble);
+      bubble.scrollIntoView({ behavior: "smooth", block: "end" });
+
+      return { bubble, thinking, content, status };
     }
 
     function updateAssistantBubble(assistantBubble, { content, thinking, loading }) {
@@ -654,11 +655,11 @@
 
       clearSelectedImages();
       messages.push({ role: "user", content });
-      createBubble("user", text || "", imageFiles);
+      createUserBubble(text || "", imageFiles);
 
       console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
 
-      const assistantBubble = createBubble("assistant");
+      const assistantBubble = createAssistantBubble("assistant");
 
       let response;
       try {
