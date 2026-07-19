@@ -434,19 +434,13 @@
     }
 
     function updateAssistantBubble(assistantBubble, { content, thinking, loading }) {
-      if (thinking !== undefined) {
-        assistantBubble.thinking.textContent = thinking;
-        assistantBubble.thinking.classList.toggle("visible", Boolean(thinking));
-      }
-      if (content !== undefined) {
-        assistantBubble.content.textContent = content;
-      }
-      if (loading !== undefined) {
-        assistantBubble.status.classList.toggle("visible", loading);
-        assistantBubble.status.innerHTML = loading
-          ? '<span class="dot"></span><span>Thinking…</span>'
-          : '';
-      }
+      assistantBubble.thinking.textContent = thinking;
+      assistantBubble.thinking.classList.toggle("visible", Boolean(thinking));
+
+      assistantBubble.content.textContent = content;
+
+      assistantBubble.status.classList.toggle("visible", loading);
+      assistantBubble.status.innerHTML = loading ? '<span class="dot"></span><span>Thinking…</span>' : '';
     }
 
     function clearChat() {
