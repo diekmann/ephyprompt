@@ -564,38 +564,17 @@
       });
     }
 
-    async function buildImageContent(files, text) {
-      const parts = [];
-      if (text) parts.push({ type: "text", text });
-      for (const file of files) {
-        parts.push({ type: "image_url", image_url: { url: await fileToBase64(file) } });
-      }
-      return parts;
-    }
-
-    /**
-     * Build the messages array for the API request.
-     *
-     * Images are only sent on the message they were first attached to (the
-     * last user message).  All previous messages have their image data
-     * stripped so we don't re-send large base64 payloads on every turn.
-     */
+    // strip old out image attachments.
     function buildApiMessages(allMessages) {
       const lastIndex = allMessages.length - 1;
       return allMessages.map((message, index) => {
-        // Keep the current message (last in the array) unchanged so its
-        // images are transmitted this once.
+        // Keep the current message (last in the array) unchanged so its images are transmitted this once.
         if (index === lastIndex) {
           return message;
         }
-        // For every previous message, strip image_url parts and keep only
-        // the text so we don't re-send base64 image data.
+        // For every previous message, strip image_url parts and keep only the text so we don't re-send base64 image data.
         if (Array.isArray(message.content)) {
-          const text = message.content
-            .filter((part) => part.type === "text")
-            .map((part) => part.text)
-            .join("");
-          return { ...message, content: text || "[image previously shared]" };
+          return { ...message, content: message.content.filter((part) => part.type === "text") };
         }
         return message;
       });
@@ -643,9 +622,15 @@
         return;
       }
 
-      const content = imageFiles.length > 0
-        ? await buildImageContent(imageFiles, text || "Describe these images")
-        : text;
+      const content = [];
+      if (text) content.push({ type: "text", text });
+
+      for (const image of imageFiles) {
+        content.push({
+          type: "image_url",
+          image_url: { url: await fileToBase64(image) }
+        });
+      }
 
       clearSelectedImages();
       messages.push({ role: "user", content });
