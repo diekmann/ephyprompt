@@ -523,7 +523,7 @@
 
       try {
         const dpi = parseInt(elements.pdfDpi.value, 10) || 72;
-        const response = await fetch("http://localhost:3000/rasterize-pdf", {
+        const response = await fetch("/rasterize-pdf", {
           method: "POST",
           headers: {
             "Content-Type": "application/pdf",
@@ -662,7 +662,7 @@
 
       let response;
       try {
-        response = await fetch("http://localhost:3000/chat", {
+        response = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
           body: JSON.stringify({
