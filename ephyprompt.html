@@ -606,7 +606,7 @@
       });
     }
 
-    function processSSEBuffer(buffer, onEvent) {
+    function processSSEBuffer(buffer, processData) {
       const chunks = buffer.split("\n\n");
       const remainder = chunks.pop() || "";
 
@@ -625,7 +625,7 @@
         }
 
         try {
-          onEvent(JSON.parse(dataLine));
+          processData(JSON.parse(dataLine));
         } catch (error) {
           console.log("[ephyprompt]", "Failed to parse SSE payload", { dataLine, error: error.message });
         }
@@ -697,8 +697,8 @@
       let assistantThinking = "";
       let sseBuffer = "";
 
-      function processEvent(event) {
-        const delta = event.choices?.[0]?.delta;
+      function processReceived(data) {
+        const delta = data.choices?.[0]?.delta;
         if (delta?.content) assistantText += delta.content;
         const thinkingDelta = delta?.reasoning_content ?? delta?.reasoning;
         if (thinkingDelta) assistantThinking += thinkingDelta;
@@ -708,9 +708,9 @@
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processEvent);
+        sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processReceived);
       }
-      processSSEBuffer(sseBuffer + decoder.decode(), processEvent);
+      processSSEBuffer(sseBuffer + decoder.decode(), processReceived);
 
       const reply = assistantText || "(no response)";
       updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
