@@ -352,7 +352,11 @@
     let messages = [];
 
     function logDebug(message, detail) {
-      console.log("[ephyprompt]", message, detail ?? "");
+        if (detail == null) {
+          console.log("[ephyprompt]", message);
+        } else {
+          console.log("[ephyprompt]", message, detail);
+        }
     }
 
     function populateModelOptions() {
@@ -738,7 +742,7 @@
       updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
       messages.push({ role: "assistant", content: reply });
       elements.input.value = "";
-      logDebug("Chat response completed", { reply });
+      logDebug("Chat response completed");
     }
 
     document.addEventListener("DOMContentLoaded", () => {
