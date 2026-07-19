@@ -221,10 +221,14 @@
     }
 
     @keyframes pulse {
-      0%, 80%, 100% {
+
+      0%,
+      80%,
+      100% {
         transform: scale(0.8);
         opacity: 0.5;
       }
+
       40% {
         transform: scale(1);
         opacity: 1;
@@ -693,42 +697,20 @@
       let assistantThinking = "";
       let sseBuffer = "";
 
+      function processEvent(event) {
+        const delta = event.choices?.[0]?.delta;
+        if (delta?.content) assistantText += delta.content;
+        const thinkingDelta = delta?.reasoning_content ?? delta?.reasoning;
+        if (thinkingDelta) assistantThinking += thinkingDelta;
+        updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+      }
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        sseBuffer = processSSEBuffer(sseBuffer + chunk, (event) => {
-          const contentDelta = event.choices?.[0]?.delta?.content;
-          if (contentDelta) {
-            assistantText += contentDelta;
-            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
-          }
-
-          const thinkingDelta = event.choices?.[0]?.delta?.reasoning_content ?? event.choices?.[0]?.delta?.reasoning;
-          if (thinkingDelta) {
-            assistantThinking += thinkingDelta;
-            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
-          }
-        });
+        sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processEvent);
       }
-
-      const finalChunk = decoder.decode();
-      if (finalChunk) {
-        sseBuffer = processSSEBuffer(sseBuffer + finalChunk, (event) => {
-          const contentDelta = event.choices?.[0]?.delta?.content;
-          if (contentDelta) {
-            assistantText += contentDelta;
-            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
-          }
-
-          const thinkingDelta = event.choices?.[0]?.delta?.reasoning_content ?? event.choices?.[0]?.delta?.reasoning;
-          if (thinkingDelta) {
-            assistantThinking += thinkingDelta;
-            updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
-          }
-        });
-      }
+      processSSEBuffer(sseBuffer + decoder.decode(), processEvent);
 
       const reply = assistantText || "(no response)";
       updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
