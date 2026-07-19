@@ -564,15 +564,14 @@
       });
     }
 
-    // strip old out image attachments.
-    function buildApiMessages(allMessages) {
+    function stripOldAttachments(allMessages) {
       const lastIndex = allMessages.length - 1;
       return allMessages.map((message, index) => {
         // Keep the current message (last in the array) unchanged so its images are transmitted this once.
         if (index === lastIndex) {
           return message;
         }
-        // For every previous message, strip image_url parts and keep only the text so we don't re-send base64 image data.
+        // For every previous message, strip image_url and similar and only keep text.
         if (Array.isArray(message.content)) {
           return { ...message, content: message.content.filter((part) => part.type === "text") };
         }
@@ -647,7 +646,7 @@
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
           body: JSON.stringify({
             model,
-            messages: buildApiMessages(messages),
+            messages: stripOldAttachments(messages),  // save tokens: don't re-send the images all the time.
             stream: true,
             chat_template_kwargs: { enable_thinking: thinkingEnabled, thinking: thinkingEnabled }
           })
