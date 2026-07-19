@@ -351,14 +351,6 @@
 
     let messages = [];
 
-    function logDebug(message, detail) {
-        if (detail == null) {
-          console.log("[ephyprompt]", message);
-        } else {
-          console.log("[ephyprompt]", message, detail);
-        }
-    }
-
     function populateModelOptions() {
       elements.model.innerHTML = "";
       for (const model of MODEL_OPTIONS) {
@@ -455,7 +447,7 @@
     function clearChat() {
       messages = [];
       elements.messages.innerHTML = "";
-      logDebug("Chat cleared");
+      console.log("[ephyprompt]", "Chat cleared");
     }
 
     function updateImageSelectionSummary() {
@@ -552,9 +544,9 @@
         appendFilesToImageInput(jpgFiles);
 
         setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name}`);
-        logDebug("PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
+        console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
       } catch (error) {
-        logDebug("PDF rasterization failed", { error: error.message });
+        console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });
         setPdfStatus(`Failed to rasterize ${file.name}: ${error.message}`);
         alert(`Failed to rasterize PDF: ${error.message}`);
       } finally {
@@ -624,14 +616,14 @@
 
         if (!dataLine) continue;
         if (dataLine === "[DONE]") {
-          logDebug("Stream finished");
+          console.log("[ephyprompt]", "Stream finished");
           continue;
         }
 
         try {
           onEvent(JSON.parse(dataLine));
         } catch (error) {
-          logDebug("Failed to parse SSE payload", { dataLine, error: error.message });
+          console.log("[ephyprompt]", "Failed to parse SSE payload", { dataLine, error: error.message });
         }
       }
 
@@ -660,7 +652,7 @@
       messages.push({ role: "user", content });
       createBubble("user", text || "", imageFiles);
 
-      logDebug("Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
+      console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
 
       const assistantBubble = createBubble("assistant");
 
@@ -681,11 +673,11 @@
         return;
       }
 
-      logDebug("Received response", { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") });
+      console.log("[ephyprompt]", "Received response", { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") });
 
       if (!response.ok) {
         const errorText = await response.text();
-        logDebug("Request failed", { status: response.status, body: errorText });
+        console.log("[ephyprompt]", "Request failed", { status: response.status, body: errorText });
         updateAssistantBubble(assistantBubble, { content: `ERROR: ${errorText}`, thinking: false, loading: false });
         return;
       }
@@ -742,7 +734,7 @@
       updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
       messages.push({ role: "assistant", content: reply });
       elements.input.value = "";
-      logDebug("Chat response completed");
+      console.log("[ephyprompt]", "Chat response completed");
     }
 
     document.addEventListener("DOMContentLoaded", () => {
