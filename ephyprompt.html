@@ -394,17 +394,26 @@
       return bubble;
     }
 
-    function createUserBubble(text = "", attachments = []) {
+    function createUserBubble(content) {
       const bubble = createBubble("user");
       const body = document.createElement("div");
 
-      body.textContent = text || "[empty]";
+      for (const item of content) {
+        if (item.type === "text") {
+          const text = document.createElement("div");
+          text.textContent = item.text;
+          body.appendChild(text);
+        }
 
-      if (attachments.length > 0) {
-        const attachmentLabel = document.createElement("div");
-        attachmentLabel.className = "attachment-chip";
-        attachmentLabel.innerHTML = `🖼️ <span class="attachment-name">${attachments.map((file) => file.name).join(", ")}</span>`;
-        body.appendChild(attachmentLabel);
+        if (item.type === "image_url") {
+          const link = document.createElement("a");
+          link.href = item.image_url.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.className = "attachment-chip";
+          link.textContent = "🖼️ View image";
+          body.appendChild(link);
+        }
       }
 
       bubble.appendChild(body);
@@ -637,7 +646,7 @@
 
       clearSelectedImages();
       messages.push({ role: "user", content });
-      createUserBubble(text || "", imageFiles);
+      createUserBubble(content);
 
       console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
 
