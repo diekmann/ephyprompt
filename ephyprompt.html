@@ -626,6 +626,10 @@
 
       for (const image of imageFiles) {
         content.push({
+          type: "text",
+          text: `Filename: ${image.name}`
+        });
+        content.push({
           type: "image_url",
           image_url: { url: await fileToBase64(image) }
         });
