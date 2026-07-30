@@ -354,6 +354,7 @@
     };
 
     let messages = [];
+    let activeRequest = null;
 
     function populateModelOptions() {
       elements.model.innerHTML = "";
@@ -588,6 +589,10 @@
       });
     }
 
+    function setSendButtonReceiving(receiving) {
+      elements.send.textContent = receiving ? "Stop" : "Send";
+    }
+
     function processSSEBuffer(buffer, processData) {
       const chunks = buffer.split("\n\n");
       const remainder = chunks.pop() || "";
@@ -618,6 +623,10 @@
 
     async function send(event) {
       event?.preventDefault();
+      if (activeRequest) {
+        activeRequest.abort();
+        return;
+      }
 
       const text = elements.input.value.trim();
       const model = elements.model.value;
@@ -653,9 +662,12 @@
       const assistantBubble = createAssistantBubble("assistant");
 
       let response;
+      activeRequest = new AbortController();
+      setSendButtonReceiving(true);
       try {
         response = await fetch("/chat", {
           method: "POST",
+          signal: activeRequest.signal,
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
           body: JSON.stringify({
             model,
@@ -665,7 +677,13 @@
           })
         });
       } catch (error) {
-        updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
+        if (error.name === "AbortError") {
+          updateAssistantBubble(assistantBubble, { content: "(stopped)", thinking: false, loading: false });
+        } else {
+          updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
+        }
+        activeRequest = null;
+        setSendButtonReceiving(false);
         return;
       }
 
@@ -697,12 +715,23 @@
         updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
       }
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processReceived);
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processReceived);
+        }
+        processSSEBuffer(sseBuffer + decoder.decode(), processReceived);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          updateAssistantBubble(assistantBubble, { content: "(aborted)", thinking: false, loading: false });
+        } else {
+          throw error;
+        }
+      } finally {
+        activeRequest = null;
+        setSendButtonReceiving(false);
       }
-      processSSEBuffer(sseBuffer + decoder.decode(), processReceived);
 
       const reply = assistantText || "(no response)";
       updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
@@ -721,7 +750,7 @@
       elements.input.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           event.preventDefault();
-          if (!elements.send.disabled) {
+          if (!activeRequest && !elements.send.disabled) {
             send(event);
           }
         }

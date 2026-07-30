@@ -215,6 +215,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(error_body.encode("utf-8"))
 
+        except (BrokenPipeError, ConnectionResetError) as e:
+            print(f"Client disconnected: {type(e).__name__}")
+
         except Exception as e:
             print(f"[proxy] request failed: {e}", file=sys.stderr)
             self.send_response(500)
