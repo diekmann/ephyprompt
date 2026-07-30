@@ -443,6 +443,7 @@
       return { bubble, thinking, content, status };
     }
 
+
     function updateAssistantBubble(assistantBubble, { content, thinking, loading }) {
       assistantBubble.thinking.textContent = thinking;
       assistantBubble.thinking.classList.toggle("visible", Boolean(thinking));
@@ -451,6 +452,8 @@
 
       assistantBubble.status.classList.toggle("visible", loading);
       assistantBubble.status.innerHTML = loading ? '<span class="dot"></span><span>Thinking…</span>' : '';
+
+      assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
     }
 
     function clearChat() {
