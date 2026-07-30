@@ -147,6 +147,8 @@
       align-self: flex-start;
       background: var(--panel);
       border: 1px solid var(--border);
+      position: relative;
+      padding-bottom: 32px;
     }
 
     .bubble-label {
@@ -156,6 +158,35 @@
       letter-spacing: 0.04em;
       margin-bottom: 4px;
       color: var(--muted);
+    }
+
+    .copy-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .copy-btn.visible {
+      display: flex;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: #bfdbfe;
     }
 
     .bubble.user .bubble-label {
@@ -424,8 +455,26 @@
       return { bubble };
     }
 
+    async function copyToClipboard(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "✓";
+        setTimeout(() => { button.textContent = "📋"; }, 1200);
+      } catch {
+        console.error("Copy failed:", err);
+        button.textContent = "❌";
+      }
+    }
+
     function createAssistantBubble() {
       const bubble = createBubble("assistant");
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "copy-btn";
+      copyBtn.textContent = "📋";
+      copyBtn.title = "Copy response";
+      copyBtn.setAttribute("aria-label", "Copy response");
 
       const thinking = document.createElement("div");
       thinking.className = "thinking";
@@ -436,11 +485,13 @@
 
       const content = document.createElement("div");
 
-      bubble.append(thinking, status, content);
+      copyBtn.addEventListener("click", () => copyToClipboard(content.textContent, copyBtn));
+
+      bubble.append(copyBtn, thinking, status, content);
       elements.messages.appendChild(bubble);
       bubble.scrollIntoView({ behavior: "smooth", block: "end" });
 
-      return { bubble, thinking, content, status };
+      return { bubble, copyBtn, thinking, content, status };
     }
 
 
@@ -452,6 +503,9 @@
 
       assistantBubble.status.classList.toggle("visible", loading);
       assistantBubble.status.innerHTML = loading ? '<span class="dot"></span><span>Thinking…</span>' : '';
+
+      const hasContent = content && String(content).trim().length > 0;
+      assistantBubble.copyBtn.classList.toggle("visible", hasContent);
 
       assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
     }
