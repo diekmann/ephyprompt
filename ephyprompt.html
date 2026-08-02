@@ -771,7 +771,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       console.log("[ephyprompt]", "loading, elements.imnages still contains how many files?", elements.image.files.length);
-      clearSelectedImages(); // clear browser trying to restore upload
+      clearSelectedImages(); // clear browser trying to restore upload (firefox)
 
       populateModelOptions();
       elements.model.addEventListener("change", updateImageControls);
