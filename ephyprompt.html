@@ -100,12 +100,6 @@
       color: white;
     }
 
-    button.secondary {
-      background: var(--panel-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -346,8 +340,6 @@
         <option value="300">300 (high)</option>
       </select>
     </label>
-
-    <button type="button" id="clear" class="secondary">Clear</button>
   </aside>
 
   <main class="chat">
@@ -377,7 +369,6 @@
       pdf: document.getElementById("pdf"),
       pdfStatus: document.getElementById("pdf-status"),
       pdfDpi: document.getElementById("pdf-dpi"),
-      clear: document.getElementById("clear"),
       messages: document.getElementById("messages"),
       composer: document.getElementById("composer"),
       input: document.getElementById("input"),
@@ -508,12 +499,6 @@
       assistantBubble.copyBtn.classList.toggle("visible", hasContent);
 
       assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
-    }
-
-    function clearChat() {
-      messages = [];
-      elements.messages.innerHTML = "";
-      console.log("[ephyprompt]", "Chat cleared");
     }
 
     function updateImageSelectionSummary() {
@@ -787,7 +772,6 @@
       elements.model.addEventListener("change", updateImageControls);
       elements.image.addEventListener("change", updateImageSelectionSummary);
       elements.pdf.addEventListener("change", handlePdfSelected);
-      elements.clear.addEventListener("click", clearChat);
       elements.composer.addEventListener("submit", send);
       elements.input.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
