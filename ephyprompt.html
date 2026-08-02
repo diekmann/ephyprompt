@@ -631,21 +631,6 @@
       });
     }
 
-    function stripOldAttachments(allMessages) {
-      const lastIndex = allMessages.length - 1;
-      return allMessages.map((message, index) => {
-        // Keep the current message (last in the array) unchanged so its images are transmitted this once.
-        if (index === lastIndex) {
-          return message;
-        }
-        // For every previous message, strip image_url and similar and only keep text.
-        if (Array.isArray(message.content)) {
-          return { ...message, content: message.content.filter((part) => part.type === "text") };
-        }
-        return message;
-      });
-    }
-
     function setSendButtonReceiving(receiving) {
       elements.send.textContent = receiving ? "Stop" : "Send";
     }
@@ -728,7 +713,7 @@
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
           body: JSON.stringify({
             model,
-            messages: stripOldAttachments(messages),  // save tokens: don't re-send the images all the time.
+            messages: messages,
             stream: true,
             chat_template_kwargs: { enable_thinking: thinkingEnabled, thinking: thinkingEnabled }
           })
