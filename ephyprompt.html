@@ -571,6 +571,7 @@
 
       try {
         const dpi = parseInt(elements.pdfDpi.value, 10) || 72;
+        console.log("[ephyprompt]", "PDF rasterization request. DPI: ", dpi, "X-Filename: ", file.name);
         const response = await fetch("/rasterize-pdf", {
           method: "POST",
           headers: {
@@ -595,7 +596,7 @@
         const jpgFiles = pages.map((page) => base64ToFile(page.data, page.name, "image/jpeg"));
         appendFilesToImageInput(jpgFiles);
 
-        setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name}`);
+        setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
         console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
       } catch (error) {
         console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });
