@@ -45,3 +45,11 @@ podman build -t ephyprompt .
 ```sh
 podman run --rm -it --network host -e OPENAI_API_KEY=XXX ephyprompt
 ```
+
+## Development
+
+```sh
+python3 -m venv .vnev
+source ./.vnev/bin/activate
+pip install --upgrade pymupdf
+```
