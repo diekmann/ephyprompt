@@ -98,9 +98,12 @@ def summarize_payload(payload, raw_body):
 class Handler(BaseHTTPRequestHandler):
 
     def send_cors(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        if self.headers.get("Sec-Fetch-Site") != "same-origin":
+            print("!! refusing non-local request !!")
+            self.send_response(403)
+            self.end_headers()
+            raise RuntimeError("Received non-local request. This is unexpcted usage.")
+        pass # everything is same-site, no CORS required
 
     def send_csp(self):
         # TODO: default-src 'none' and factor out JS and CSS.
