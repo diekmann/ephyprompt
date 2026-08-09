@@ -102,6 +102,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
 
+    def send_csp(self):
+        # TODO: default-src 'none' and factor out JS and CSS.
+        self.send_header("Content-Security-Policy", "connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_cors()
@@ -118,6 +122,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_csp()
         self.end_headers()
         self.wfile.write(body)
 
@@ -156,6 +161,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_cors()
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(body)))
+                self.send_csp()
                 self.end_headers()
                 self.wfile.write(body)
             except Exception as e:
@@ -165,6 +171,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_cors()
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(error_body)))
+                self.send_csp()
                 self.end_headers()
                 self.wfile.write(error_body)
             return
@@ -195,6 +202,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(status)
                 self.send_cors()
                 self.send_header("Content-Type", content_type)
+                self.send_csp()
                 self.end_headers()
 
                 while True:
@@ -212,6 +220,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(e.code)
             self.send_cors()
             self.send_header("Content-Type", "application/json")
+            self.send_csp()
             self.end_headers()
             self.wfile.write(error_body.encode("utf-8"))
 
@@ -223,6 +232,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(500)
             self.send_cors()
             self.send_header("Content-Type", "application/json")
+            self.send_csp()
             self.end_headers()
             self.wfile.write(str(e).encode("utf-8"))
 
