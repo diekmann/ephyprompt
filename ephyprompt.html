@@ -437,7 +437,26 @@
           link.rel = "noopener noreferrer";
           link.className = "attachment-chip";
           link.textContent = "🖼️ View image";
+
+          // browsers don't like navigating to data URLs, so also show the image in-place.
+          const img = document.createElement("img");
+          img.src = item.image_url.url;
+          img.style.display = "none";
+          img.style.position = "absolute";
+          img.style.top = "100%";
+          img.style.right = "0";
+          img.style.zIndex = "1000";
+          link.style.position = "relative";
+
+          link.appendChild(img);
           body.appendChild(link);
+
+          link.addEventListener("mouseenter", () => {
+            img.style.display = "block";
+          });
+          link.addEventListener("mouseleave", () => {
+            img.style.display = "none";
+          });
         }
       }
 
