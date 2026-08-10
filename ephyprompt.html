@@ -431,7 +431,7 @@
         }
 
         if (item.type === "image_url") {
-          link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right")
+          const link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right")
           body.appendChild(link);
         }
       }
@@ -476,8 +476,8 @@
         await navigator.clipboard.writeText(text);
         button.textContent = "✓";
         setTimeout(() => { button.textContent = "📋"; }, 1200);
-      } catch {
-        console.error("Copy failed:", err);
+      } catch (error) {
+        console.error("Copy failed:", error);
         button.textContent = "❌";
       }
     }
@@ -546,9 +546,9 @@
       });
     }
 
-    async function clearSelectedImages() {
+    function clearSelectedImages() {
       elements.image.value = "";
-      await updateImageSelectionSummary();
+      updateImageSelectionSummary();
     }
 
     function setPdfStatus(text, loading = false) {
@@ -720,7 +720,7 @@
 
       console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
 
-      const assistantBubble = createAssistantBubble("assistant");
+      const assistantBubble = createAssistantBubble();
 
       let response;
       activeRequest = new AbortController();
