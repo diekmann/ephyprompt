@@ -431,32 +431,8 @@
         }
 
         if (item.type === "image_url") {
-          const link = document.createElement("a");
-          link.href = item.image_url.url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.className = "attachment-chip";
-          link.textContent = "🖼️ View image";
-
-          // browsers don't like navigating to data URLs, so also show the image in-place.
-          const img = document.createElement("img");
-          img.src = item.image_url.url;
-          img.style.display = "none";
-          img.style.position = "absolute";
-          img.style.top = "100%";
-          img.style.right = "0";
-          img.style.zIndex = "1000";
-          link.style.position = "relative";
-
-          link.appendChild(img);
+          link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right")
           body.appendChild(link);
-
-          link.addEventListener("mouseenter", () => {
-            img.style.display = "block";
-          });
-          link.addEventListener("mouseleave", () => {
-            img.style.display = "none";
-          });
         }
       }
 
@@ -465,6 +441,34 @@
       bubble.scrollIntoView({ behavior: "smooth", block: "end" });
 
       return { bubble };
+    }
+
+    // browsers don't like navigating to data URLs, so also show the image in-place.
+    function imagePreviewLink(dataUrlImage, text, imagePopupSide) {
+      const link = document.createElement("a");
+      link.href = dataUrlImage;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = "attachment-chip";
+      link.textContent = text;
+
+      const img = document.createElement("img");
+      img.src = dataUrlImage;
+      img.style.display = "none";
+      img.style.position = "absolute";
+      img.style.top = "100%";
+      img.style[imagePopupSide] = "0";
+      img.style.zIndex = "1000";
+      link.style.position = "relative";
+
+      link.appendChild(img);
+      link.addEventListener("mouseenter", () => {
+        img.style.display = "block";
+      });
+      link.addEventListener("mouseleave", () => {
+        img.style.display = "none";
+      });
+      return link;
     }
 
     async function copyToClipboard(text, button) {
@@ -522,7 +526,7 @@
       assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
     }
 
-    function updateImageSelectionSummary() {
+    async function updateImageSelectionSummary() {
       const files = Array.from(elements.image.files || []);
       if (files.length === 0) {
         elements.imageSelection.textContent = "No images selected";
@@ -531,12 +535,20 @@
       }
 
       elements.imageSelection.hidden = false;
-      elements.imageSelection.textContent = files.map((file) => file.name).join(", ");
+      elements.imageSelection.replaceChildren();
+
+      const dataUrls = await Promise.all(files.map(fileToBase64));
+      dataUrls.forEach((dataUrl, index) => {
+        if (index > 0) {
+          elements.imageSelection.appendChild(document.createTextNode(", "));
+        }
+        elements.imageSelection.appendChild(imagePreviewLink(dataUrl, `🖼️ ${files[index].name}`, "left"));
+      });
     }
 
-    function clearSelectedImages() {
+    async function clearSelectedImages() {
       elements.image.value = "";
-      updateImageSelectionSummary();
+      await updateImageSelectionSummary();
     }
 
     function setPdfStatus(text, loading = false) {
@@ -562,7 +574,16 @@
       return new File([bytes], name, { type: mimeType });
     }
 
-    function appendFilesToImageInput(files) {
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function appendFilesToImageInput(files) {
       const dt = new DataTransfer();
       for (const existing of Array.from(elements.image.files || [])) {
         dt.items.add(existing);
@@ -571,7 +592,7 @@
         dt.items.add(file);
       }
       elements.image.files = dt.files;
-      updateImageSelectionSummary();
+      await updateImageSelectionSummary();
     }
 
     async function handlePdfSelected(event) {
@@ -614,7 +635,7 @@
         }
 
         const jpgFiles = pages.map((page) => base64ToFile(page.data, page.name, "image/jpeg"));
-        appendFilesToImageInput(jpgFiles);
+        await appendFilesToImageInput(jpgFiles);
 
         setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
         console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
@@ -627,15 +648,6 @@
         elements.pdf.disabled = false;
         elements.send.disabled = false;
       }
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
     }
 
     function setSendButtonReceiving(receiving) {
