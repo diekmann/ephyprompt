@@ -381,7 +381,7 @@
     let activeRequest = null;
 
     function populateModelOptions() {
-      elements.model.innerHTML = "";
+      elements.model.replaceChildren();
       for (const model of MODEL_OPTIONS) {
         const option = document.createElement("option");
         option.value = model.id;
@@ -439,8 +439,6 @@
       bubble.appendChild(body);
       elements.messages.appendChild(bubble);
       bubble.scrollIntoView({ behavior: "smooth", block: "end" });
-
-      return { bubble };
     }
 
     // browsers don't like navigating to data URLs, so also show the image in-place.
@@ -691,7 +689,6 @@
 
       const text = elements.input.value.trim();
       const model = elements.model.value;
-      const thinkingEnabled = elements.thinking.checked;
       const imageFiles = Array.from(elements.image.files || []);
       const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === model);
 
@@ -734,7 +731,7 @@
             model,
             messages: messages,
             stream: true,
-            chat_template_kwargs: { enable_thinking: thinkingEnabled, thinking: thinkingEnabled }
+            chat_template_kwargs: { enable_thinking: elements.thinking.checked, thinking: elements.thinking.checked }
           })
         });
       } catch (error) {
@@ -754,12 +751,16 @@
         const errorText = await response.text();
         console.log("[ephyprompt]", "Request failed", { status: response.status, body: errorText });
         updateAssistantBubble(assistantBubble, { content: `ERROR: ${errorText}`, thinking: false, loading: false });
+        activeRequest = null;
+        setSendButtonReceiving(false);
         return;
       }
 
       const reader = response.body?.getReader();
       if (!reader) {
         updateAssistantBubble(assistantBubble, { content: "ERROR: response body is not readable", thinking: false, loading: false });
+        activeRequest = null;
+        setSendButtonReceiving(false);
         return;
       }
 
