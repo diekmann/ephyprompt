@@ -21,6 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_FILES = {
     "/": ("ephyprompt.html", "text/html; charset=utf-8"),
     "/ephyprompt.html": ("ephyprompt.html", "text/html; charset=utf-8"),
+    "/favicon.ico": ("favicon.ico", "image/x-icon"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
 }
