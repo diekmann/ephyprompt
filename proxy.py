@@ -97,21 +97,22 @@ def summarize_payload(payload, raw_body):
 
 class Handler(BaseHTTPRequestHandler):
 
-    def send_cors(self):
-        if self.headers.get("Sec-Fetch-Site") != "same-origin":
-            print("!! refusing non-local request !!")
-            self.send_response(403)
-            self.end_headers()
-            raise RuntimeError("Received non-local request. This is unexpcted usage.")
-        pass # everything is same-site, no CORS required
-
     def send_csp(self):
+        """Main Content Security Policy for the main page."""
         # TODO: default-src 'none' and factor out JS and CSS.
         self.send_header("Content-Security-Policy", "connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
 
+    def send_api_headers(self):
+        """Strict headers with strict Content Security Policy for raw bytes API requests."""
+        if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin only!
+            self.send_error(403, "Refusing non-local request")
+            raise RuntimeError("Received non-local request. This is unexpcted usage.")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none';")
+
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_cors()
+        self.send_api_headers()
         self.end_headers()
 
     def serve_static_html(self):
@@ -161,20 +162,18 @@ class Handler(BaseHTTPRequestHandler):
                 body = json.dumps(result).encode("utf-8")
 
                 self.send_response(200)
-                self.send_cors()
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(body)))
-                self.send_csp()
+                self.send_api_headers()
                 self.end_headers()
                 self.wfile.write(body)
             except Exception as e:
                 print(f"[proxy] rasterize-pdf failed: {e}", file=sys.stderr)
                 error_body = json.dumps({"error": str(e)}).encode("utf-8")
                 self.send_response(500)
-                self.send_cors()
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(error_body)))
-                self.send_csp()
+                self.send_api_headers()
                 self.end_headers()
                 self.wfile.write(error_body)
             return
@@ -203,9 +202,8 @@ class Handler(BaseHTTPRequestHandler):
                 print(f"[proxy] upstream status={status} content-type={content_type}")
 
                 self.send_response(status)
-                self.send_cors()
                 self.send_header("Content-Type", content_type)
-                self.send_csp()
+                self.send_api_headers()
                 self.end_headers()
 
                 while True:
@@ -221,9 +219,8 @@ class Handler(BaseHTTPRequestHandler):
             print(f"[proxy] upstream error status={e.code} body={error_body[:500]}", file=sys.stderr)
 
             self.send_response(e.code)
-            self.send_cors()
             self.send_header("Content-Type", "application/json")
-            self.send_csp()
+            self.send_api_headers()
             self.end_headers()
             self.wfile.write(error_body.encode("utf-8"))
 
@@ -233,9 +230,8 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"[proxy] request failed: {e}", file=sys.stderr)
             self.send_response(500)
-            self.send_cors()
             self.send_header("Content-Type", "application/json")
-            self.send_csp()
+            self.send_api_headers()
             self.end_headers()
             self.wfile.write(str(e).encode("utf-8"))
 
