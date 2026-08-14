@@ -104,7 +104,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_csp(self):
         """Main Content Security Policy for the main page."""
-        # TODO: default-src 'none' and factor out JS and CSS.
         self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
 
     def send_api_headers(self):
