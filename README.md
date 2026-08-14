@@ -1,5 +1,7 @@
 # EphyPrompt
 
+![Screenshot of EphyPrompt with a PDF upload](screenshot.png)
+
 EphyPrompt is a simple LLM chat UI which runs completely locally and calls out to your LLM provider.
 
 The name EphyPrompt is an abbreviation for Ephemeral Prompting.

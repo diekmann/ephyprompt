@@ -241,6 +241,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("EphyPrompt proxy running at http://localhost:3000")
-    print("Open the UI at http://localhost:3000/ephyprompt.html")
+    print("EphyPrompt running at http://localhost:3000/")
     HTTPServer(("localhost", 3000), Handler).serve_forever()
