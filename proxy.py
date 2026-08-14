@@ -22,7 +22,7 @@ STATIC_FILES = {
     "/": ("ephyprompt.html", "text/html; charset=utf-8"),
     "/ephyprompt.html": ("ephyprompt.html", "text/html; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
-    # "/app.js": ("app.js", "application/javascript; charset=utf-8"),
+    "/app.js": ("app.js", "application/javascript; charset=utf-8"),
 }
 
 
@@ -105,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
     def send_csp(self):
         """Main Content Security Policy for the main page."""
         # TODO: default-src 'none' and factor out JS and CSS.
-        self.send_header("Content-Security-Policy", "style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""

@@ -26,7 +26,7 @@ With a vision model, it can handle pdf (via brute-force, rendering each page as 
 ## Properties
 
 * If the external LLM provider has good privacy and does not retain any data, EphyPrompt is 100% private and retains 0 data.
-* EphyPrompt is one single HTML file with JavaScript. And a tiny local proxy due to CORS restrictions and for pdf rasterization.
+* EphyPrompt is one single HTML file with JavaScript. And a tiny local proxy due to CORS restrictions, for pdf rasterization, and to set a Content Security Policy.
 * EphyPrompt relies on a minimal set of external modules (only `pymupdf`) and does not include external data. This makes it extremely easy to audit.
 * EphyPrompt can be easily run on common client operating systems.
 * Data entered into EphyPrompt is only sent to your LLM API; it otherwise never leaves EphyPrompt.
