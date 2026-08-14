@@ -18,7 +18,12 @@ if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set.")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_PATH = os.path.join(BASE_DIR, "ephyprompt.html")
+STATIC_FILES = {
+    "/": ("ephyprompt.html", "text/html; charset=utf-8"),
+    "/ephyprompt.html": ("ephyprompt.html", "text/html; charset=utf-8"),
+    "/style.css": ("style.css", "text/css; charset=utf-8"),
+    # "/app.js": ("app.js", "application/javascript; charset=utf-8"),
+}
 
 
 def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
@@ -100,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
     def send_csp(self):
         """Main Content Security Policy for the main page."""
         # TODO: default-src 'none' and factor out JS and CSS.
-        self.send_header("Content-Security-Policy", "font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
+        self.send_header("Content-Security-Policy", "style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
@@ -116,16 +121,26 @@ class Handler(BaseHTTPRequestHandler):
         self.send_api_headers()
         self.end_headers()
 
-    def serve_static_html(self):
-        if not os.path.exists(HTML_PATH):
-            self.send_error(404, "ephyprompt.html not found")
+    def serve_static(self, path):
+        entry = STATIC_FILES.get(path)
+        if entry is None:
+            self.send_error(404, "Not Found")
+            return
+        filename, content_type = entry
+        file_path = os.path.join(BASE_DIR, filename)
+        if not os.path.isfile(file_path):
+            self.send_error(404, f"{filename} not found")
+            return
+        try:
+            with open(file_path, "rb") as fh:
+                body = fh.read()
+        except OSError as e:
+            print(f"Unable to read {filename}: {e}")
+            self.send_error(500, f"Unable to read {filename}")
             return
 
-        with open(HTML_PATH, "r", encoding="utf-8") as fh:
-            body = fh.read().encode("utf-8")
-
         self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_csp()
         self.end_headers()
@@ -133,8 +148,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path in ("/", "/ephyprompt.html"):
-            self.serve_static_html()
+        if path in STATIC_FILES:
+            self.serve_static(path)
             return
         self.send_error(404, "Not Found")
 
