@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from collections import Counter
 import base64
 import json
 import os
@@ -45,60 +46,21 @@ def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
         doc.close()
 
 def summarize_payload(payload, raw_body):
-    """Return a one-line summary of the request payload for logging."""
     messages = payload.get("messages") or []
-    role_counts = {}
-    image_count = 0
-    text_chars = 0
-    tool_call_count = 0
-    for msg in messages:
-        if not isinstance(msg, dict):
-            continue
-        role = msg.get("role", "?")
-        role_counts[role] = role_counts.get(role, 0) + 1
-        content = msg.get("content")
-        if isinstance(content, list):
-            for part in content:
-                if not isinstance(part, dict):
-                    continue
-                ptype = part.get("type")
-                if ptype == "image_url":
-                    image_count += 1
-                elif ptype == "text":
-                    text_chars += len(part.get("text", "") or "")
-        elif isinstance(content, str):
-            text_chars += len(content)
-        tool_calls = msg.get("tool_calls")
-        if isinstance(tool_calls, list):
-            tool_call_count += len(tool_calls)
-
-    parts = [
-        f"messages={len(messages)}",
-        f"roles={role_counts}",
-        f"images={image_count}",
-        f"text_chars={text_chars}",
-        f"tool_calls={tool_call_count}",
-    ]
-
-    extras = []
-    for key in ("temperature", "top_p", "max_tokens", "presence_penalty", "frequency_penalty"):
-        if key in payload:
-            extras.append(f"{key}={payload[key]}")
-    if "response_format" in payload:
-        extras.append(f"response_format={payload['response_format']}")
-    tools = payload.get("tools")
-    if isinstance(tools, list) and tools:
-        tool_names = [t.get("function", {}).get("name", "?") for t in tools if isinstance(t, dict)]
-        extras.append(f"tools={tool_names}")
-    if payload.get("stream"):
-        extras.append("stream=true")
-
-    if extras:
-        parts.append("opts={" + ", ".join(extras) + "}")
-
-    parts.append(f"bytes={len(raw_body)}")
-
-    return " ".join(parts)
+    return {
+        **{k: v for k, v in payload.items() if k != "messages"},
+        "messages": {
+            "count": len(messages),
+            "roles": Counter(m.get("role", "?") for m in messages if isinstance(m, dict)),
+            "types": Counter(
+                p.get("type", "?")
+                for m in messages if isinstance(m, dict)
+                for p in (m.get("content") if isinstance(m.get("content"), list) else [])
+                if isinstance(p, dict)
+            ),
+        },
+        "bytes": len(raw_body),
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
