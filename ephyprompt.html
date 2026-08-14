@@ -18,6 +18,7 @@
     <label class="field">
       <span>Model</span>
       <select id="model"></select>
+      <div id="model-info" class="image-selection-list"></div>
     </label>
 
     <label class="checkbox">
@@ -72,6 +73,7 @@
 
     const elements = {
       model: document.getElementById("model"),
+      modelInfo: document.getElementById("model-info"),
       thinking: document.getElementById("thinking"),
       image: document.getElementById("image"),
       imageSelection: document.getElementById("image-selection"),
@@ -97,6 +99,11 @@
       }
       elements.model.value = MODEL_OPTIONS[0].id;
       updateImageControls();
+    }
+
+    function updateModelInfo() {
+      const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
+      elements.modelInfo.textContent = model?.info || "";
     }
 
     function updateImageControls() {
@@ -514,7 +521,11 @@
       clearSelectedImages(); // clear browser trying to restore upload (firefox)
 
       populateModelOptions();
-      elements.model.addEventListener("change", updateImageControls);
+      updateModelInfo();
+      elements.model.addEventListener("change", () => {
+        updateImageControls();
+        updateModelInfo();
+      });
       elements.image.addEventListener("change", updateImageSelectionSummary);
       elements.pdf.addEventListener("change", handlePdfSelected);
       elements.composer.addEventListener("submit", send);
