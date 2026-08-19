@@ -25,6 +25,13 @@ body {
     overflow: hidden;
 }
 
+input,
+select,
+textarea,
+button {
+    font: inherit;
+}
+
 .sidebar {
     width: 300px;
     padding: 14px;
@@ -51,6 +58,15 @@ body {
     font-size: 14px;
 }
 
+.field select,
+.field input[type="file"] {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: var(--panel);
+}
+
 .image-selection-list {
     margin-top: 6px;
     font-size: 12px;
@@ -59,42 +75,11 @@ body {
     word-break: break-word;
 }
 
-input,
-select,
-textarea,
-button {
-    font: inherit;
-}
-
-select,
-input[type="file"],
-textarea {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    background: var(--panel);
-}
-
 .checkbox {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 14px;
-}
-
-button {
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    background: var(--accent);
-    color: white;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 .chat {
@@ -131,13 +116,13 @@ button:disabled {
 
 .bubble.assistant {
     align-self: flex-start;
+    position: relative;
     background: var(--panel);
     border: 1px solid var(--border);
-    position: relative;
     padding-bottom: 32px;
 }
 
-.bubble-label {
+.bubble .bubble-label {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
@@ -146,7 +131,11 @@ button:disabled {
     color: var(--muted);
 }
 
-.copy-btn {
+.bubble.user .bubble-label {
+    color: rgba(255, 255, 255, .8);
+}
+
+.bubble.assistant .copy-btn {
     position: absolute;
     bottom: 8px;
     right: 8px;
@@ -159,24 +148,18 @@ button:disabled {
     border-radius: 6px;
     background: var(--panel-2);
     color: var(--muted);
-    font-size: 14px;
-    line-height: 1;
     border: 1px solid var(--border);
     cursor: pointer;
 }
 
-.copy-btn.visible {
+.bubble.assistant .copy-btn.visible {
     display: flex;
 }
 
-.copy-btn:hover {
+.bubble.assistant .copy-btn:hover {
     background: var(--accent-soft);
     color: var(--accent);
     border-color: #bfdbfe;
-}
-
-.bubble.user .bubble-label {
-    color: rgba(255, 255, 255, .8);
 }
 
 .attachment-chip {
@@ -200,7 +183,7 @@ button:disabled {
     white-space: nowrap;
 }
 
-.thinking {
+.bubble.assistant .thinking {
     display: none;
     margin-top: 6px;
     padding: 8px 10px;
@@ -212,7 +195,7 @@ button:disabled {
     line-height: 1.4;
 }
 
-.thinking.visible {
+.bubble.assistant .thinking.visible {
     display: block;
 }
 
@@ -229,7 +212,8 @@ button:disabled {
     display: inline-flex;
 }
 
-.assistant-status .dot {
+.assistant-status .dot,
+.pdf-status .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -238,6 +222,7 @@ button:disabled {
 }
 
 @keyframes pulse {
+
     0%,
     80%,
     100% {
@@ -251,18 +236,10 @@ button:disabled {
     }
 }
 
-.pdf-status {
+.image-selection-list.pdf-status {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-}
-
-.pdf-status .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 1s infinite ease-in-out;
 }
 
 .composer {
@@ -274,8 +251,23 @@ button:disabled {
 }
 
 .composer textarea {
+    width: 100%;
     min-height: 64px;
     resize: vertical;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    background: var(--accent);
+    color: white;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 @media (max-width: 800px) {
