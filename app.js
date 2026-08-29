@@ -3,7 +3,7 @@
 const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4-flash-0731", label: "DeepSeek V4 Flash (günstig)", supportsImages: false, info: "$0.30/1M tokens, 1M context" },
   { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false, info: "$3.50/1M tokens, 1M context" },
-  { id: "z-ai/glm-5.2", label: "Z-AI GLM-5.2", supportsImages: false, info: "$4.50/1M tokens, 1M context" },
+  { id: "z-ai/glm-5.3", label: "Z-AI GLM-5.3", supportsImages: false, info: "$1.75/1M tokens, 1M context" },
   { id: "z-ai/glm-5v-turbo", label: "Z-AI GLM-5v Turbo (bilder)", supportsImages: true, info: "$4.00/1M tokens, 198k context" },
   { id: "z-ai/glm-5.3-flash", label: "Z-AI GLM-5.3 Flash (bilder)", supportsImages: true, info: "$0.50/1M tokens, 1M context" },
   { id: "minimax/minimax-m3", label: "Minimax M3 (bilder)", supportsImages: true, info: "$2.00/1M tokens, 1M context" },
