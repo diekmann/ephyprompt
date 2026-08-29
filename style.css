@@ -66,6 +66,9 @@ button {
     padding: 8px 10px;
     background: var(--panel);
 }
+.field input[type="file"]:disabled {
+    opacity: 0.5;
+}
 
 .image-selection-list {
     margin-top: 6px;

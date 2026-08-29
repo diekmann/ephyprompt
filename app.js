@@ -53,12 +53,10 @@ function updateImageControls() {
   const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
   const supportsImages = Boolean(model?.supportsImages);
   elements.image.disabled = !supportsImages;
-  elements.image.style.opacity = supportsImages ? "1" : "0.5";
   elements.image.title = supportsImages
     ? "Attach one or more images"
     : "Image uploads are not available for the selected model";
   elements.pdf.disabled = !supportsImages;
-  elements.pdf.style.opacity = supportsImages ? "1" : "0.5";
   elements.pdf.title = supportsImages
     ? "Upload a PDF; each page will be rasterized to a JPG on the proxy"
     : "Image uploads are not available for the selected model";
