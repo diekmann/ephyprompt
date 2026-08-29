@@ -102,25 +102,13 @@ function imagePreviewLink(dataUrlImage, text, imagePopupSide) {
   link.href = dataUrlImage;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.className = "attachment-chip";
+  link.className = `attachment-chip ${imagePopupSide}`;
   link.textContent = text;
 
   const img = document.createElement("img");
   img.src = dataUrlImage;
-  img.style.display = "none";
-  img.style.position = "absolute";
-  img.style.top = "100%";
-  img.style[imagePopupSide] = "0";
-  img.style.zIndex = "1000";
-  link.style.position = "relative";
 
   link.appendChild(img);
-  link.addEventListener("mouseenter", () => {
-    img.style.display = "block";
-  });
-  link.addEventListener("mouseleave", () => {
-    img.style.display = "none";
-  });
   return link;
 }
 

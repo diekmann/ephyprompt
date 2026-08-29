@@ -78,6 +78,26 @@ button {
     word-break: break-word;
 }
 
+.attachment-chip {
+    position: relative;
+}
+.attachment-chip img {
+    display: none;
+    position: absolute;
+    top: 100%;
+    z-index: 1000;
+}
+.attachment-chip.right img {
+    right: 0;
+}
+
+.attachment-chip.left img {
+    left: 0;
+}
+.attachment-chip:hover img {
+    display: block;
+}
+
 .checkbox {
     display: flex;
     align-items: center;
