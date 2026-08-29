@@ -193,17 +193,13 @@ function clearSelectedImages() {
 }
 
 function setPdfStatus(text, loading = false) {
-  if (!text) {
-    elements.pdfStatus.hidden = true;
-    elements.pdfStatus.innerHTML = "";
-    return;
-  }
-  elements.pdfStatus.hidden = false;
+  elements.pdfStatus.replaceChildren(text ?? "");
   if (loading) {
-    elements.pdfStatus.innerHTML = `<span class="dot"></span><span>${text}</span>`;
-  } else {
-    elements.pdfStatus.textContent = text;
+    const node = document.createElement("span");
+    node.className = "dot";
+    elements.pdfStatus.prepend(node);
   }
+  elements.pdfStatus.hidden = !text;
 }
 
 function base64ToFile(b64, name, mimeType) {
