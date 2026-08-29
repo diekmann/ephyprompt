@@ -391,72 +391,47 @@ async function send(event) {
         chat_template_kwargs: { enable_thinking: elements.thinking.checked, thinking: elements.thinking.checked }
       })
     });
-  } catch (error) {
-    if (error.name === "AbortError") {
-      updateAssistantBubble(assistantBubble, { content: "(stopped)", thinking: false, loading: false });
-    } else {
-      updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
+    console.log("[ephyprompt]", "Received response", { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") });
+
+    if (!response.ok) {
+      throw new Error(`Fetch Request failed: HTTP ${response.status}: ${await response.text()}`);
     }
-    activeRequest = null;
-    setSendButtonReceiving(false);
-    return;
-  }
+    if (!response.body) {
+      throw new Error("response body is not readable");
+    }
 
-  console.log("[ephyprompt]", "Received response", { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let assistantText = "";
+    let assistantThinking = "";
+    let sseBuffer = "";
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.log("[ephyprompt]", "Request failed", { status: response.status, body: errorText });
-    updateAssistantBubble(assistantBubble, { content: `ERROR: ${errorText}`, thinking: false, loading: false });
-    activeRequest = null;
-    setSendButtonReceiving(false);
-    return;
-  }
+    function processReceived(data) {
+      const delta = data.choices?.[0]?.delta;
+      if (delta?.content) assistantText += delta.content;
+      const thinkingDelta = delta?.reasoning_content ?? delta?.reasoning;
+      if (thinkingDelta) assistantThinking += thinkingDelta;
+      updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
+    }
 
-  const reader = response.body?.getReader();
-  if (!reader) {
-    updateAssistantBubble(assistantBubble, { content: "ERROR: response body is not readable", thinking: false, loading: false });
-    activeRequest = null;
-    setSendButtonReceiving(false);
-    return;
-  }
-
-  const decoder = new TextDecoder();
-  let assistantText = "";
-  let assistantThinking = "";
-  let sseBuffer = "";
-
-  function processReceived(data) {
-    const delta = data.choices?.[0]?.delta;
-    if (delta?.content) assistantText += delta.content;
-    const thinkingDelta = delta?.reasoning_content ?? delta?.reasoning;
-    if (thinkingDelta) assistantThinking += thinkingDelta;
-    updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
-  }
-
-  try {
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
       sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processReceived);
     }
     processSSEBuffer(sseBuffer + decoder.decode(), processReceived);
+
+    const reply = assistantText || "(no response)";
+    updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
+    messages.push({ role: "assistant", content: reply });
+    elements.input.value = "";
+    console.log("[ephyprompt]", "Chat response completed");
   } catch (error) {
-    if (error.name === "AbortError") {
-      updateAssistantBubble(assistantBubble, { content: "(aborted)", thinking: false, loading: false });
-    } else {
-      throw error;
-    }
+    updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
   } finally {
     activeRequest = null;
     setSendButtonReceiving(false);
   }
-
-  const reply = assistantText || "(no response)";
-  updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
-  messages.push({ role: "assistant", content: reply });
-  elements.input.value = "";
-  console.log("[ephyprompt]", "Chat response completed");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
