@@ -72,9 +72,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
-        if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin only!
-            self.send_error(403, "Refusing non-local request")
-            raise RuntimeError("Received non-local request. This is unexpected usage.")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Security-Policy", "default-src 'none';")
         self.send_header("Cache-Control", "no-store")
@@ -117,6 +114,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404, "Not Found")
 
     def do_POST(self):
+        if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin only!
+            self.send_error(403, "Refusing non-local request")
+            raise RuntimeError("Received non-local request. This is unexpected usage.")
         client_ip = self.address_string()
         path = self.path
 
