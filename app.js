@@ -337,11 +337,11 @@ async function send(event) {
     });
   }
 
-  clearSelectedImages();
   messages.push({ role: "user", content });
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length});
+  clearSelectedImages();
   createUserBubble(content);
 
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length, stream: true });
 
   const assistantBubble = createAssistantBubble();
 
