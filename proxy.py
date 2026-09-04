@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A tiny proxy to make requests to the LLM API, since the API may not accept request from a browser due to CORS."""
+"""A tiny proxy to make requests to the LLM API, since the API may not accept request from a browser due to CORS. Also rasterizes pdfs."""
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from collections import Counter
@@ -72,6 +72,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", "default-src 'none';")
         self.send_header("Cache-Control", "no-store")
 
+    def send_json(self, status: int, body: bytes):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_api_headers()
+        self.end_headers()
+        self.wfile.write(body)
+
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_api_headers()
@@ -133,21 +142,11 @@ class Handler(BaseHTTPRequestHandler):
                 result = rasterize_pdf(pdf_bytes, original_filename, dpi)
                 body = json.dumps(result).encode("utf-8")
 
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(body)))
-                self.send_api_headers()
-                self.end_headers()
-                self.wfile.write(body)
+                self.send_json(200, body)
             except Exception as e:
                 print(f"[proxy] rasterize-pdf failed: {e}", file=sys.stderr)
                 error_body = json.dumps({"error": str(e)}).encode("utf-8")
-                self.send_response(500)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(error_body)))
-                self.send_api_headers()
-                self.end_headers()
-                self.wfile.write(error_body)
+                self.send_json(500, error_body)
             return
 
         if path != "/chat":
@@ -192,21 +191,13 @@ class Handler(BaseHTTPRequestHandler):
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8", "replace")
             print(f"[proxy] upstream error status={e.code} body={error_body[:500]}", file=sys.stderr)
-
-            self.send_response(e.code)
-            self.send_header("Content-Type", "application/json")
-            self.send_api_headers()
-            self.end_headers()
-            self.wfile.write(error_body.encode("utf-8"))
+            self.send_json(e.code, error_body.encode("utf-8"))
         except (BrokenPipeError, ConnectionResetError) as e:
             print(f"Client disconnected: {type(e).__name__}")
         except Exception as e:
             print(f"[proxy] request failed: {e}", file=sys.stderr)
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.send_api_headers()
-            self.end_headers()
-            self.wfile.write(str(e).encode("utf-8"))
+            error_body = json.dumps({"error": str(e)}).encode("utf-8")
+            self.send_json(500, error_body)
 
 
 if __name__ == "__main__":
