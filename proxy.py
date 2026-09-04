@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """A tiny proxy to make requests to the LLM API, since the API may not accept request from a browser due to CORS."""
 
-from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from collections import Counter
 import base64
@@ -29,8 +28,7 @@ STATIC_FILES = {
 
 
 def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
-    doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
-    try:
+    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
         page_count = doc.page_count
         width = max(2, len(str(page_count)))
         stem = os.path.splitext(os.path.basename(original_filename or "document"))[0] or "document"
@@ -43,8 +41,6 @@ def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
             data_url = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
             pages.append({"name": name, "url": data_url})
         return {"pages": pages}
-    finally:
-        doc.close()
 
 def summarize_payload(payload, raw_body):
     messages = payload.get("messages") or []
@@ -81,12 +77,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_api_headers()
         self.end_headers()
 
-    def serve_static(self, path):
-        entry = STATIC_FILES.get(path)
-        if entry is None:
-            self.send_error(404, "Not Found")
-            return
-        filename, content_type = entry
+    def serve_static(self, filename, content_type):
         file_path = os.path.join(BASE_DIR, filename)
         if not os.path.isfile(file_path):
             self.send_error(404, f"{filename} not found")
@@ -108,10 +99,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path in STATIC_FILES:
-            self.serve_static(path)
+        entry = STATIC_FILES.get(path)
+        if entry is None:
+            self.send_error(404, "Not Found")
             return
-        self.send_error(404, "Not Found")
+        filename, content_type = entry
+        self.serve_static(filename, content_type )
 
     def do_POST(self):
         if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin only!
