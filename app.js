@@ -338,7 +338,7 @@ async function send(event) {
   }
 
   messages.push({ role: "user", content });
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length});
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length });
   clearSelectedImages();
   createUserBubble(content);
 
@@ -346,6 +346,8 @@ async function send(event) {
   const assistantBubble = createAssistantBubble();
 
   let response;
+  let assistantText = "";
+  let assistantThinking = "";
   activeRequest = new AbortController();
   setSendButtonReceiving(true);
   try {
@@ -371,8 +373,6 @@ async function send(event) {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let assistantText = "";
-    let assistantThinking = "";
     let sseBuffer = "";
 
     function processReceived(data) {
@@ -396,7 +396,7 @@ async function send(event) {
     elements.input.value = "";
     console.log("[ephyprompt]", "Chat response completed");
   } catch (error) {
-    updateAssistantBubble(assistantBubble, { content: `ERROR: ${error.message}`, thinking: false, loading: false });
+    updateAssistantBubble(assistantBubble, { content: `${assistantText} [ERROR] ERROR: ${error.message}`, thinking: assistantThinking, loading: false });
   } finally {
     activeRequest = null;
     setSendButtonReceiving(false);
