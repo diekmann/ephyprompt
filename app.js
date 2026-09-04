@@ -346,13 +346,12 @@ async function send(event) {
 
   const assistantBubble = createAssistantBubble();
 
-  let response;
   let assistantText = "";
   let assistantThinking = "";
   activeRequest = new AbortController();
   setSendButtonReceiving(true);
   try {
-    response = await fetch("/chat", {
+      let response = await fetch("/chat", {
       method: "POST",
       signal: activeRequest.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
