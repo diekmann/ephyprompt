@@ -170,7 +170,6 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
 
 function updateImageSelectionSummary() {
   if (attachments.length === 0) {
-    elements.imageSelection.textContent = "No images selected";
     elements.imageSelection.hidden = true;
     return;
   }
