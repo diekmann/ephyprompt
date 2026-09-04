@@ -157,6 +157,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(error_body)
             return
 
+        if path != "/chat":
+            self.send_error(404, "Not Found")
+            return
+
         try:
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)
@@ -192,7 +196,6 @@ class Handler(BaseHTTPRequestHandler):
                         break
                     self.wfile.write(chunk)
                     self.wfile.flush()
-
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8", "replace")
             print(f"[proxy] upstream error status={e.code} body={error_body[:500]}", file=sys.stderr)
@@ -202,10 +205,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_api_headers()
             self.end_headers()
             self.wfile.write(error_body.encode("utf-8"))
-
         except (BrokenPipeError, ConnectionResetError) as e:
             print(f"Client disconnected: {type(e).__name__}")
-
         except Exception as e:
             print(f"[proxy] request failed: {e}", file=sys.stderr)
             self.send_response(500)
