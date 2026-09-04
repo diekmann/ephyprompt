@@ -339,6 +339,7 @@ async function send(event) {
 
   messages.push({ role: "user", content });
   console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length });
+  elements.input.value = "";
   clearSelectedImages();
   createUserBubble(content);
 
@@ -393,7 +394,6 @@ async function send(event) {
     const reply = assistantText || "(no response)";
     updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
     messages.push({ role: "assistant", content: reply });
-    elements.input.value = "";
     console.log("[ephyprompt]", "Chat response completed");
   } catch (error) {
     updateAssistantBubble(assistantBubble, { content: `${assistantText} [ERROR] ERROR: ${error.message}`, thinking: assistantThinking, loading: false });
