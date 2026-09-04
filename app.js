@@ -2,16 +2,15 @@
 
 const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4-flash-0731", label: "DeepSeek V4 Flash (günstig)", supportsImages: false, info: "$0.30/1M tokens, 1M context" },
-  { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false, info: "$3.50/1M tokens, 1M context" },
-  { id: "z-ai/glm-5.3", label: "Z-AI GLM-5.3", supportsImages: false, info: "$1.75/1M tokens, 1M context" },
+  { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false, info: "$4.00/1M tokens, 1M context" },
+  { id: "z-ai/glm-5.3", label: "Z-AI GLM-5.3", supportsImages: false, info: "$4.50/1M tokens, 1M context" },
   { id: "z-ai/glm-5v-turbo", label: "Z-AI GLM-5v Turbo (bilder)", supportsImages: true, info: "$4.00/1M tokens, 198k context" },
   { id: "z-ai/glm-5.3-flash", label: "Z-AI GLM-5.3 Flash (bilder)", supportsImages: true, info: "$0.50/1M tokens, 1M context" },
   { id: "minimax/minimax-m3", label: "Minimax M3 (bilder)", supportsImages: true, info: "$2.00/1M tokens, 1M context" },
-  { id: "moonshotai/kimi-k2.6", label: "Moonshot kimi K2.6 (bilder)", supportsImages: true, info: "$4.00/1M tokens, 256k context" },
+  { id: "moonshotai/kimi-k2.7-code", label: "Moonshot kimi K2.7-Code (bilder)", supportsImages: true, info: "$4.50/1M tokens, 256k context" },
   { id: "moonshotai/kimi-k3", label: "Moonshot kimi K3 (bilder, teuer!!)", supportsImages: true, info: "$15.00/1M tokens, 1M context" },
   { id: "qwen/qwen3.8-2.4t-a95b", label: "Qwen3.8-Max", supportsImages: false, info: "$6.00/1M tokens, 256k context" },
   { id: "qwen/qwen3.8-flash-next", label: "Qwen3.8-Flash-Next (Bilder)", supportsImages: true, info: "$0.50/1M tokens, 256k context" },
-  { id: "qwen/qwen3.5-122b-a10b", label: "Qwen 3.5 (bilder)", supportsImages: true, info: "$3.50/1M tokens, 256k context" }
 ];
 
 const elements = {
