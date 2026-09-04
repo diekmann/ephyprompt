@@ -40,7 +40,8 @@ def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
             pix = page.get_pixmap(dpi=dpi)
             jpg_bytes = pix.tobytes("jpg")
             name = f"{stem}-page-{str(index + 1).zfill(width)}.jpg"
-            pages.append({"name": name, "data": base64.b64encode(jpg_bytes).decode("ascii")})
+            data_url = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
+            pages.append({"name": name, "url": data_url})
         return {"pages": pages}
     finally:
         doc.close()

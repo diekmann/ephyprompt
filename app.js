@@ -31,6 +31,7 @@ const elements = {
 
 let messages = [];
 let activeRequest = null;
+let attachments = []; // { name, url } pairs; url is always a data URL
 
 function populateModelOptions() {
   elements.model.replaceChildren();
@@ -167,9 +168,8 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
   assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
 }
 
-async function updateImageSelectionSummary() {
-  const files = Array.from(elements.image.files || []);
-  if (files.length === 0) {
+function updateImageSelectionSummary() {
+  if (attachments.length === 0) {
     elements.imageSelection.textContent = "No images selected";
     elements.imageSelection.hidden = true;
     return;
@@ -178,17 +178,26 @@ async function updateImageSelectionSummary() {
   elements.imageSelection.hidden = false;
   elements.imageSelection.replaceChildren();
 
-  const dataUrls = await Promise.all(files.map(fileToBase64));
-  dataUrls.forEach((dataUrl, index) => {
+  attachments.forEach((attachment, index) => {
     if (index > 0) {
       elements.imageSelection.appendChild(document.createTextNode(", "));
     }
-    elements.imageSelection.appendChild(imagePreviewLink(dataUrl, `🖼️ ${files[index].name}`, "left"));
+    elements.imageSelection.appendChild(imagePreviewLink(attachment.url, `🖼️ ${attachment.name}`, "left"));
   });
+}
+
+// The file picker is just an import control: read the files once, append, reset.
+async function handleImagesSelected() {
+  const files = Array.from(elements.image.files || []);
+  const picked = await Promise.all(files.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
+  attachments.push(...picked);
+  elements.image.value = "";
+  updateImageSelectionSummary();
 }
 
 function clearSelectedImages() {
   elements.image.value = "";
+  attachments = [];
   updateImageSelectionSummary();
 }
 
@@ -202,34 +211,13 @@ function setPdfStatus(text, loading = false) {
   elements.pdfStatus.hidden = !text;
 }
 
-function base64ToFile(b64, name, mimeType) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new File([bytes], name, { type: mimeType });
-}
-
-function fileToBase64(file) {
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-}
-
-async function appendFilesToImageInput(files) {
-  const dt = new DataTransfer();
-  for (const existing of Array.from(elements.image.files || [])) {
-    dt.items.add(existing);
-  }
-  for (const file of files) {
-    dt.items.add(file);
-  }
-  elements.image.files = dt.files;
-  await updateImageSelectionSummary();
 }
 
 async function handlePdfSelected(event) {
@@ -271,11 +259,11 @@ async function handlePdfSelected(event) {
       throw new Error("Proxy returned no pages");
     }
 
-    const jpgFiles = pages.map((page) => base64ToFile(page.data, page.name, "image/jpeg"));
-    await appendFilesToImageInput(jpgFiles);
+    attachments.push(...pages);
+    updateImageSelectionSummary();
 
-    setPdfStatus(`Added ${jpgFiles.length} page${jpgFiles.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
-    console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: jpgFiles.length });
+    setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
+    console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: pages.length });
   } catch (error) {
     console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });
     setPdfStatus(`Failed to rasterize ${file.name}: ${error.message}`);
@@ -328,10 +316,9 @@ async function send(event) {
 
   const text = elements.input.value.trim();
   const model = elements.model.value;
-  const imageFiles = Array.from(elements.image.files || []);
   const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === model);
 
-  if (imageFiles.length > 0 && !modelConfig?.supportsImages) {
+  if (attachments.length > 0 && !modelConfig?.supportsImages) {
     alert("The selected model does not support image uploads.");
     return;
   }
@@ -339,14 +326,14 @@ async function send(event) {
   const content = [];
   if (text) content.push({ type: "text", text });
 
-  for (const image of imageFiles) {
+  for (const attachment of attachments) {
     content.push({
       type: "text",
-      text: `Filename: ${image.name}`
+      text: `Filename: ${attachment.name}`
     });
     content.push({
       type: "image_url",
-      image_url: { url: await fileToBase64(image) }
+      image_url: { url: attachment.url }
     });
   }
 
@@ -354,7 +341,7 @@ async function send(event) {
   messages.push({ role: "user", content });
   createUserBubble(content);
 
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageFiles.length, stream: true });
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length, stream: true });
 
   const assistantBubble = createAssistantBubble();
 
@@ -417,7 +404,6 @@ async function send(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[ephyprompt]", "loading, elements.imnages still contains how many files?", elements.image.files.length);
   clearSelectedImages(); // clear browser trying to restore upload (firefox)
 
   populateModelOptions();
@@ -426,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateImageControls();
     updateModelInfo();
   });
-  elements.image.addEventListener("change", updateImageSelectionSummary);
+  elements.image.addEventListener("change", handleImagesSelected);
   elements.pdf.addEventListener("change", handlePdfSelected);
   elements.composer.addEventListener("submit", send);
   elements.input.addEventListener("keydown", (event) => {
