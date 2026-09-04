@@ -79,15 +79,18 @@ function createUserBubble(content) {
   const body = document.createElement("div");
 
   for (const item of content) {
-    if (item.type === "text") {
-      const text = document.createElement("div");
-      text.textContent = item.text;
-      body.appendChild(text);
-    }
-
-    if (item.type === "image_url") {
-      const link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right")
-      body.appendChild(link);
+    switch (item.type) {
+      case "text": {
+        const text = document.createElement("div");
+        text.textContent = item.text;
+        body.appendChild(text);
+        break;
+      }
+      case "image_url": {
+        const link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right");
+        body.appendChild(link);
+        break;
+      }
     }
   }
 
@@ -349,7 +352,7 @@ async function send(event) {
   activeRequest = new AbortController();
   setSendButtonReceiving(true);
   try {
-      let response = await fetch("/chat", {
+    let response = await fetch("/chat", {
       method: "POST",
       signal: activeRequest.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
