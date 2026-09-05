@@ -365,6 +365,9 @@ async function send(event) {
     if (!response.ok) {
       throw new Error(`Fetch Request failed: HTTP ${response.status}: ${await response.text()}`);
     }
+    if (!response.headers.get("content-type").toLowerCase().startsWith("text/event-stream")) {
+      throw new Error(`Expected SSE, got ${response.headers.get("content-type") || "missing Content-Type"}`);
+    }
     if (!response.body) {
       throw new Error("response body is not readable");
     }
