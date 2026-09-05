@@ -166,8 +166,6 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
 
   const hasContent = content && String(content).trim().length > 0;
   assistantBubble.copyBtn.classList.toggle("visible", hasContent);
-
-  assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
 }
 
 function updateImageSelectionSummary() {
@@ -403,6 +401,7 @@ async function send(event) {
   } finally {
     activeRequest = null;
     setSendButtonReceiving(false);
+    assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
   }
 }
 
