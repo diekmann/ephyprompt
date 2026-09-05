@@ -80,7 +80,6 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_api_headers()
@@ -116,10 +115,9 @@ class Handler(BaseHTTPRequestHandler):
         self.serve_static(filename, content_type )
 
     def do_POST(self):
-        if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin only!
+        if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin requests only.
             self.send_error(403, "Refusing non-local request")
             raise RuntimeError("Received non-local request. This is unexpected usage.")
-        client_ip = self.address_string()
         path = self.path
 
         if path == "/rasterize-pdf":
@@ -137,7 +135,7 @@ class Handler(BaseHTTPRequestHandler):
                     dpi = 72
                 # Clamp to a sane range to avoid accidentally huge images.
                 dpi = max(36, min(600, dpi))
-                print(f"[proxy] POST {path} from {client_ip} filename={original_filename} dpi={dpi} bytes={len(pdf_bytes)}")
+                print(f"[proxy] POST {path} filename={original_filename} dpi={dpi} bytes={len(pdf_bytes)}")
 
                 result = rasterize_pdf(pdf_bytes, original_filename, dpi)
                 body = json.dumps(result).encode("utf-8")
@@ -158,7 +156,7 @@ class Handler(BaseHTTPRequestHandler):
             body = self.rfile.read(length)
             payload = json.loads(body or b"{}")
 
-            print(f"[proxy] POST {path} from {client_ip} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
+            print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
             print(f"[proxy] request summary: {summarize_payload(payload, body)}")
 
             req = urllib.request.Request(
@@ -185,6 +183,7 @@ class Handler(BaseHTTPRequestHandler):
                     print(".", end="", flush=True)
                     chunk = resp.read(8192)
                     if not chunk:
+                        print()
                         break
                     self.wfile.write(chunk)
                     self.wfile.flush()

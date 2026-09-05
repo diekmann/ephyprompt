@@ -396,7 +396,10 @@ async function send(event) {
     messages.push({ role: "assistant", content: reply });
     console.log("[ephyprompt]", "Chat response completed");
   } catch (error) {
-    updateAssistantBubble(assistantBubble, { content: `${assistantText} [ERROR] ERROR: ${error.message}`, thinking: assistantThinking, loading: false });
+    let errMsg = `${assistantText} [ERROR] ERROR: ${error.message}`;
+    updateAssistantBubble(assistantBubble, { content: errMsg, thinking: assistantThinking, loading: false });
+    messages.push({ role: "assistant", content: errMsg });
+    console.log("[ephyprompt]", "Chat response failed");
   } finally {
     activeRequest = null;
     setSendButtonReceiving(false);
