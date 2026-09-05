@@ -291,20 +291,17 @@ function processSSEBuffer(buffer, processData) {
       if (!trimmed) continue;
       if (trimmed.startsWith("data:")) dataLine = trimmed.slice(5).trim();
     }
-
     if (!dataLine) continue;
     if (dataLine === "[DONE]") {
       console.log("[ephyprompt]", "Stream finished");
       continue;
     }
-
     try {
       processData(JSON.parse(dataLine));
     } catch (error) {
       console.log("[ephyprompt]", "Failed to parse SSE payload", { dataLine, error: error.message });
     }
   }
-
   return remainder;
 }
 
@@ -372,9 +369,6 @@ async function send(event) {
       throw new Error("response body is not readable");
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let sseBuffer = "";
 
     function processReceived(data) {
       const delta = data.choices?.[0]?.delta;
@@ -384,6 +378,9 @@ async function send(event) {
       updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
     }
 
+    let sseBuffer = "";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
