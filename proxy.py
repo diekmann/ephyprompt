@@ -29,15 +29,13 @@ STATIC_FILES = {
 
 def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
     with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
-        page_count = doc.page_count
-        width = max(2, len(str(page_count)))
-        stem = os.path.splitext(os.path.basename(original_filename or "document"))[0] or "document"
+        fname = os.path.splitext(os.path.basename(original_filename))[0] or "document"
         pages = []
-        for index in range(page_count):
+        for index in range(doc.page_count):
             page = doc.load_page(index)
             pix = page.get_pixmap(dpi=dpi)
             jpg_bytes = pix.tobytes("jpg")
-            name = f"{stem}-page-{str(index + 1).zfill(width)}.jpg"
+            name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.jpg"
             data_url = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
             pages.append({"name": name, "url": data_url})
         return {"pages": pages}
