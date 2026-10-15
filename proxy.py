@@ -107,6 +107,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if path == "/v1/model/info":
+            self.fwd_request(urllib.request.Request(
+                    TENSORX_URL + path,
+                    headers={
+                        "Authorization": f"Bearer {API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    method="GET"
+                ))
+            return
+
         entry = STATIC_FILES.get(path)
         if entry is None:
             self.send_error(404, "Not Found")
@@ -165,9 +176,7 @@ class Handler(BaseHTTPRequestHandler):
 
         print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
         print(f"[proxy] request summary: {summarize_payload(payload, body)}")
-
-        try:
-            req = urllib.request.Request(
+        self.fwd_request(urllib.request.Request(
                 TENSORX_URL + path,
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
@@ -175,8 +184,10 @@ class Handler(BaseHTTPRequestHandler):
                     "Content-Type": "application/json"
                 },
                 method="POST"
-            )
+            ))
 
+    def fwd_request(self, req: urllib.request.Request):
+        try:
             with urllib.request.urlopen(req) as resp:
                 status = resp.getcode()
                 content_type = resp.headers.get("Content-Type", "application/json")

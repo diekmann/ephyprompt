@@ -1,5 +1,8 @@
 "use strict";
 
+// TODO: This should be populated from https://api.tensorx.ai/v1/model/info on loading.
+// supportsImages == supports_vision.  Also show output_cost_per_token (multiplied by a million to get cost per M tokens)  and max_input_tokens (1024 abbreviated as k, 1024*1024 abbreviated as M)
+// label should just be the second part of the model, e.g., if the model is z-ai/glm-5.3 then the label is glm-5.3. If supportsImages add (Bilder). If price is <1$/1M tokens, add (günstig). If price is >10$/1M tokens, add (teuer).  If max_input_tokens is >1M, add (langer Kontext).
 const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4-flash-0731", label: "DeepSeek V4 Flash (günstig)", supportsImages: false, info: "$0.30/1M tokens, 1M context" },
   { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false, info: "$4.00/1M tokens, 1M context" },
