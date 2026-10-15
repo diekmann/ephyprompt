@@ -1,15 +1,15 @@
 "use strict";
 
 const MODEL_OPTIONS = [
-  { id: "deepseek/deepseek-v4-flash-0731", label: "Loading…" },
-  { id: "deepseek/deepseek-v4-pro-0813", label: "Loading…" },
-  { id: "z-ai/glm-5.3", label: "Loading…" },
-  { id: "z-ai/glm-5.3-flash", label: "Loading…" },
-  { id: "minimax/minimax-m3", label: "Loading…" },
-  { id: "moonshotai/kimi-k2.7-code", label: "Loading…" },
-  { id: "moonshotai/kimi-k3", label: "Loading…" },
-  { id: "qwen/qwen3.8-2.4t-a95b", label: "Loading…" },
-  { id: "qwen/qwen3.8-flash-next", label: "Loading…" },
+  { id: "deepseek/deepseek-v4-flash-0731", label: "deepseek-v4-flash Loading…" },
+  { id: "deepseek/deepseek-v4-pro-0813", label: "deepseek-v4-pro Loading…" },
+  { id: "z-ai/glm-5.3", label: "glm-5.3 Loading…" },
+  { id: "z-ai/glm-5.3-flash", label: "glm-5.3-flash Loading…", supportsImages: true },
+  { id: "minimax/minimax-m3", label: "minimax-m3 Loading…" },
+  { id: "moonshotai/kimi-k2.7-code", label: "kimi-k2.7-code Loading…" },
+  { id: "moonshotai/kimi-k3", label: "kimi-k3 Loading…" },
+  { id: "qwen/qwen3.8-2.4t-a95b", label: "qwen3.8-2.4t-a95b Loading…" },
+  { id: "qwen/qwen3.8-flash-next", label: "qwen3.8-flash-next Loading…" },
 ];
 
 async function loadModelOptions() {
