@@ -12,7 +12,7 @@ import urllib.request
 
 import pymupdf
 
-TENSORX_URL = "https://api.tensorx.ai/v1/chat/completions"
+TENSORX_URL = "https://api.tensorx.ai"
 API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set.")
@@ -147,7 +147,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(500, error_body)
             return
 
-        if path != "/chat":
+        if path != "/v1/chat/completions":
             self.send_error(404, "Not Found")
             return
 
@@ -160,7 +160,7 @@ class Handler(BaseHTTPRequestHandler):
             print(f"[proxy] request summary: {summarize_payload(payload, body)}")
 
             req = urllib.request.Request(
-                TENSORX_URL,
+                TENSORX_URL + path,
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Authorization": f"Bearer {API_KEY}",

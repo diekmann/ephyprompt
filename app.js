@@ -347,7 +347,7 @@ async function send(event) {
   activeRequest = new AbortController();
   setSendButtonReceiving(true);
   try {
-    let response = await fetch("/chat", {
+    let response = await fetch("/v1/chat/completions", {
       method: "POST",
       signal: activeRequest.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
