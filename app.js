@@ -1,20 +1,91 @@
 "use strict";
 
-// TODO: This should be populated from https://api.tensorx.ai/v1/model/info on loading.
-// supportsImages == supports_vision.  Also show output_cost_per_token (multiplied by a million to get cost per M tokens)  and max_input_tokens (1024 abbreviated as k, 1024*1024 abbreviated as M)
-// label should just be the second part of the model, e.g., if the model is z-ai/glm-5.3 then the label is glm-5.3. If supportsImages add (Bilder). If price is <1$/1M tokens, add (günstig). If price is >10$/1M tokens, add (teuer).  If max_input_tokens is >1M, add (langer Kontext).
 const MODEL_OPTIONS = [
-  { id: "deepseek/deepseek-v4-flash-0731", label: "DeepSeek V4 Flash (günstig)", supportsImages: false, info: "$0.30/1M tokens, 1M context" },
-  { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", supportsImages: false, info: "$4.00/1M tokens, 1M context" },
-  { id: "z-ai/glm-5.3", label: "Z-AI GLM-5.3", supportsImages: false, info: "$4.50/1M tokens, 1M context" },
-  { id: "z-ai/glm-5v-turbo", label: "Z-AI GLM-5v Turbo (bilder)", supportsImages: true, info: "$4.00/1M tokens, 198k context" },
-  { id: "z-ai/glm-5.3-flash", label: "Z-AI GLM-5.3 Flash (bilder)", supportsImages: true, info: "$0.50/1M tokens, 1M context" },
-  { id: "minimax/minimax-m3", label: "Minimax M3 (bilder)", supportsImages: true, info: "$2.00/1M tokens, 1M context" },
-  { id: "moonshotai/kimi-k2.7-code", label: "Moonshot kimi K2.7-Code (bilder)", supportsImages: true, info: "$4.50/1M tokens, 256k context" },
-  { id: "moonshotai/kimi-k3", label: "Moonshot kimi K3 (bilder, teuer!!)", supportsImages: true, info: "$15.00/1M tokens, 1M context" },
-  { id: "qwen/qwen3.8-2.4t-a95b", label: "Qwen3.8-Max", supportsImages: false, info: "$6.00/1M tokens, 256k context" },
-  { id: "qwen/qwen3.8-flash-next", label: "Qwen3.8-Flash-Next (Bilder)", supportsImages: true, info: "$0.50/1M tokens, 256k context" },
+  { id: "deepseek/deepseek-v4-flash-0731", label: "Loading…" },
+  { id: "deepseek/deepseek-v4-pro-0813", label: "Loading…" },
+  { id: "z-ai/glm-5.3", label: "Loading…" },
+  { id: "z-ai/glm-5.3-flash", label: "Loading…" },
+  { id: "minimax/minimax-m3", label: "Loading…" },
+  { id: "moonshotai/kimi-k2.7-code", label: "Loading…" },
+  { id: "moonshotai/kimi-k3", label: "Loading…" },
+  { id: "qwen/qwen3.8-2.4t-a95b", label: "Loading…" },
+  { id: "qwen/qwen3.8-flash-next", label: "Loading…" },
 ];
+
+async function loadModelOptions() {
+  const models = new Map();
+  try {
+    const response = await fetch("/v1/model/info");
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+    const payload = await response.json();
+    if (!Array.isArray(payload?.data)) {
+      throw new Error("unexpected response shape from /v1/model/info");
+    }
+    for (const entry of payload.data) { //  model_name can appear more than once; keep the first entry per name.
+      if (entry?.model_name && !models.has(entry.model_name)) {
+        models.set(entry.model_name, entry.model_info ?? {});
+      }
+    }
+    console.log("[ephyprompt]", "Model info loaded", { modelCount: models.size });
+  } catch (error) {
+    console.error("[ephyprompt]", "Failed to load model info", { error: error.message });
+  }
+
+  for (const model of MODEL_OPTIONS) {
+    const modelInfo = models.get(model.id);
+    const name = model.id.split("/").pop();
+    if (!modelInfo) {
+      model.label = `${name} (❌ Modell wird nicht mehr unterstützt)`;
+      continue;
+    }
+    const pricePerMillionTokens = modelInfo.output_cost_per_token * 1000000;
+    const maxInputTokens = modelInfo.max_input_tokens;
+    const tags = [];
+    if (modelInfo.supports_vision) tags.push("Bilder");
+    if (pricePerMillionTokens < 1) tags.push("günstig");
+    else if (pricePerMillionTokens > 10) tags.push("teuer");
+    if (maxInputTokens >= 1024 * 1024) tags.push("langer Kontext");
+
+    let context;
+    if (maxInputTokens >= 1024 * 1024) context = `${Math.round(maxInputTokens / (1024 * 1024))}M`;
+    else if (maxInputTokens >= 1024) context = `${Math.round(maxInputTokens / 1024)}k`;
+    else context = String(maxInputTokens);
+
+    model.label = tags.length > 0 ? `${name} (${tags.join(", ")})` : name;
+    model.supportsImages = Boolean(modelInfo.supports_vision);
+    model.info = `$${pricePerMillionTokens.toFixed(2)}/1M tokens, ${context} context`;
+  }
+
+  renderModelOptions();
+}
+
+function renderModelOptions() {
+  elements.model.replaceChildren();
+  for (const model of MODEL_OPTIONS) {
+    elements.model.append(new Option(model.label, model.id));
+  }
+  elements.model.value = MODEL_OPTIONS[0].id;
+  updateModelControls();
+}
+
+function updateModelControls() {
+  const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
+  elements.modelInfo.textContent = model?.info || "";
+
+  const supportsImages = Boolean(model?.supportsImages);
+  elements.image.disabled = !supportsImages;
+  elements.image.title = supportsImages
+    ? "Attach one or more images"
+    : "Image uploads are not available for the selected model";
+  elements.pdf.disabled = !supportsImages;
+  elements.pdf.title = supportsImages
+    ? "Upload a PDF; each page will be rasterized to a JPG on the proxy"
+    : "Image uploads are not available for the selected model";
+}
+
+
 
 const elements = {
   model: document.getElementById("model"),
@@ -34,36 +105,6 @@ const elements = {
 let messages = [];
 let activeRequest = null;
 let attachments = []; // { name, url } pairs; url is always a data URL
-
-function populateModelOptions() {
-  elements.model.replaceChildren();
-  for (const model of MODEL_OPTIONS) {
-    const option = document.createElement("option");
-    option.value = model.id;
-    option.textContent = model.label;
-    elements.model.appendChild(option);
-  }
-  elements.model.value = MODEL_OPTIONS[0].id;
-  updateImageControls();
-}
-
-function updateModelInfo() {
-  const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
-  elements.modelInfo.textContent = model?.info || "";
-}
-
-function updateImageControls() {
-  const model = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
-  const supportsImages = Boolean(model?.supportsImages);
-  elements.image.disabled = !supportsImages;
-  elements.image.title = supportsImages
-    ? "Attach one or more images"
-    : "Image uploads are not available for the selected model";
-  elements.pdf.disabled = !supportsImages;
-  elements.pdf.title = supportsImages
-    ? "Upload a PDF; each page will be rasterized to a JPG on the proxy"
-    : "Image uploads are not available for the selected model";
-}
 
 function createBubble(role) {
   const bubble = document.createElement("div");
@@ -411,12 +452,9 @@ async function send(event) {
 document.addEventListener("DOMContentLoaded", () => {
   clearSelectedImages(); // clear browser trying to restore upload (firefox)
 
-  populateModelOptions();
-  updateModelInfo();
-  elements.model.addEventListener("change", () => {
-    updateImageControls();
-    updateModelInfo();
-  });
+  renderModelOptions();
+  loadModelOptions();
+  elements.model.addEventListener("change", updateModelControls);
   elements.image.addEventListener("change", handleImagesSelected);
   elements.pdf.addEventListener("change", handlePdfSelected);
   elements.composer.addEventListener("submit", send);
