@@ -155,10 +155,18 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)
             payload = json.loads(body or b"{}")
+        except (BrokenPipeError, ConnectionResetError):
+            print("Client disconnected while sending request body")
+            return
+        except ValueError as e:
+            print(f"[proxy] bad request: {e}", file=sys.stderr)
+            self.send_json(400, json.dumps({"error": str(e)}).encode("utf-8"))
+            return
 
-            print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
-            print(f"[proxy] request summary: {summarize_payload(payload, body)}")
+        print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
+        print(f"[proxy] request summary: {summarize_payload(payload, body)}")
 
+        try:
             req = urllib.request.Request(
                 TENSORX_URL + path,
                 data=json.dumps(payload).encode("utf-8"),
