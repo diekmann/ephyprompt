@@ -82,7 +82,7 @@ function updateModelControls() {
     : "Image uploads are not available for the selected model";
   elements.pdf.disabled = !supportsImages;
   elements.pdf.title = supportsImages
-    ? "Upload a PDF; each page will be rasterized to a JPG on the proxy"
+    ? "Upload a PDF; each page will be rasterized to a PNG on the proxy"
     : "Image uploads are not available for the selected model";
 }
 

@@ -38,9 +38,9 @@ def rasterize_pdf(pdf_bytes, original_filename, dpi):
                 pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
             else:
                 pix = page.get_pixmap(dpi=dpi)
-            jpg_bytes = pix.tobytes("jpg")
-            name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.jpg"
-            data_url = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
+            png_bytes = pix.tobytes("png")
+            name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.png"
+            data_url = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
             pages.append({"name": name, "url": data_url})
         return {"pages": pages}
 
