@@ -279,8 +279,8 @@ async function handlePdfSelected(event) {
   elements.send.disabled = true;
 
   try {
-    const dpi = parseInt(elements.pdfDpi.value, 10) || 72;
-    console.log("[ephyprompt]", "PDF rasterization request. DPI: ", dpi, "X-Filename: ", file.name);
+    const dpi = elements.pdfDpi.value;
+    console.log("[ephyprompt]", "PDF rasterization request. DPI:", dpi, "X-Filename:", file.name);
     const response = await fetch("/rasterize-pdf", {
       method: "POST",
       headers: {

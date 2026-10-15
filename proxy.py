@@ -27,13 +27,17 @@ STATIC_FILES = {
 }
 
 
-def rasterize_pdf(pdf_bytes, original_filename, dpi=72):
+def rasterize_pdf(pdf_bytes, original_filename, dpi):
     with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
         fname = os.path.splitext(os.path.basename(original_filename))[0] or "document"
         pages = []
         for index in range(doc.page_count):
             page = doc.load_page(index)
-            pix = page.get_pixmap(dpi=dpi)
+            if dpi == 'auto':
+                zoom = 640 / page.rect.width
+                pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
+            else:
+                pix = page.get_pixmap(dpi=dpi)
             jpg_bytes = pix.tobytes("jpg")
             name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.jpg"
             data_url = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
@@ -139,11 +143,9 @@ class Handler(BaseHTTPRequestHandler):
                 original_filename = self.headers.get("X-Filename", "")
                 dpi_raw = self.headers.get("X-DPI", "").strip()
                 try:
-                    dpi = int(dpi_raw) if dpi_raw else 72
+                    dpi = max(36, min(600, int(dpi_raw)))
                 except ValueError:
-                    dpi = 72
-                # Clamp to a sane range to avoid accidentally huge images.
-                dpi = max(36, min(600, dpi))
+                    dpi = 'auto'
                 print(f"[proxy] POST {path} filename={original_filename} dpi={dpi} bytes={len(pdf_bytes)}")
 
                 result = rasterize_pdf(pdf_bytes, original_filename, dpi)
