@@ -70,7 +70,7 @@ button {
     opacity: 0.5;
 }
 
-.image-selection-list {
+.attachment-selection-list {
     margin-top: 6px;
     font-size: 12px;
     line-height: 1.4;
@@ -192,18 +192,11 @@ button {
     margin-top: 6px;
     padding: 6px 8px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    color: inherit;
+    background: var(--accent-soft);
     font-size: 13px;
     line-height: 1.2;
     width: fit-content;
     max-width: 100%;
-}
-
-.attachment-chip .attachment-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .bubble.assistant .thinking {
@@ -259,7 +252,7 @@ button {
     }
 }
 
-.image-selection-list.pdf-status {
+.attachment-selection-list.pdf-status {
     display: inline-flex;
     align-items: center;
     gap: 8px;
