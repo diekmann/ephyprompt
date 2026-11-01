@@ -106,7 +106,7 @@ const elements = {
 
 let messages = [];
 let activeRequest = null;
-let attachments = []; // { name, url } pairs; url is always a data URL
+let imageAttachments = []; // { name, url } pairs; url is always a data URL
 
 function createBubble(role) {
   const bubble = document.createElement("div");
@@ -215,7 +215,7 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
 }
 
 function updateImageSelectionSummary() {
-  if (attachments.length === 0) {
+  if (imageAttachments.length === 0) {
     elements.imageSelection.hidden = true;
     return;
   }
@@ -223,7 +223,7 @@ function updateImageSelectionSummary() {
   elements.imageSelection.hidden = false;
   elements.imageSelection.replaceChildren();
 
-  attachments.forEach((attachment, index) => {
+  imageAttachments.forEach((attachment, index) => {
     if (index > 0) {
       elements.imageSelection.appendChild(document.createTextNode(", "));
     }
@@ -235,14 +235,14 @@ function updateImageSelectionSummary() {
 async function handleImagesSelected() {
   const files = Array.from(elements.image.files || []);
   const picked = await Promise.all(files.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
-  attachments.push(...picked);
+  imageAttachments.push(...picked);
   elements.image.value = "";
   updateImageSelectionSummary();
 }
 
 function clearSelectedImages() {
   elements.image.value = "";
-  attachments = [];
+  imageAttachments = [];
   updateImageSelectionSummary();
 }
 
@@ -304,7 +304,7 @@ async function handlePdfSelected(event) {
       throw new Error("Proxy returned no pages");
     }
 
-    attachments.push(...pages);
+    imageAttachments.push(...pages);
     updateImageSelectionSummary();
 
     setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
@@ -360,7 +360,7 @@ async function send(event) {
   const model = elements.model.value;
   const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === model);
 
-  if (attachments.length > 0 && !modelConfig?.supportsImages) {
+  if (imageAttachments.length > 0 && !modelConfig?.supportsImages) {
     alert("The selected model does not support image uploads.");
     return;
   }
@@ -368,7 +368,7 @@ async function send(event) {
   const content = [];
   if (text) content.push({ type: "text", text });
 
-  for (const attachment of attachments) {
+  for (const attachment of imageAttachments) {
     content.push({
       type: "text",
       text: `Filename: ${attachment.name}`
@@ -380,7 +380,7 @@ async function send(event) {
   }
 
   messages.push({ role: "user", content });
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: attachments.length });
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageAttachments.length });
   elements.input.value = "";
   clearSelectedImages();
   createUserBubble(content);
