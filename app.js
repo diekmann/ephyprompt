@@ -77,12 +77,12 @@ function updateModelControls() {
   elements.modelInfo.textContent = model?.info || "";
 
   const supportsImages = Boolean(model?.supportsImages);
-  elements.image.disabled = !supportsImages;
-  elements.image.title = supportsImages
+  elements.imageAttachments.disabled = !supportsImages;
+  elements.imageAttachments.title = supportsImages
     ? "Attach one or more images"
     : "Image uploads are not available for the selected model";
-  elements.pdf.disabled = !supportsImages;
-  elements.pdf.title = supportsImages
+  elements.pdfAttachments.disabled = !supportsImages;
+  elements.pdfAttachments.title = supportsImages
     ? "Upload a PDF; each page will be rasterized to a PNG on the proxy"
     : "Image uploads are not available for the selected model";
 }
@@ -93,9 +93,9 @@ const elements = {
   model: document.getElementById("model"),
   modelInfo: document.getElementById("model-info"),
   thinking: document.getElementById("thinking"),
-  image: document.getElementById("image"),
+  imageAttachments: document.getElementById("image-attachments"),
   imageSelection: document.getElementById("image-selection"),
-  pdf: document.getElementById("pdf"),
+  pdfAttachments: document.getElementById("pdf-attachments"),
   pdfStatus: document.getElementById("pdf-status"),
   pdfDpi: document.getElementById("pdf-dpi"),
   messages: document.getElementById("messages"),
@@ -233,15 +233,15 @@ function updateImageSelectionSummary() {
 
 // The file picker is just an import control: read the files once, append, reset.
 async function handleImagesSelected() {
-  const files = Array.from(elements.image.files || []);
+  const files = Array.from(elements.imageAttachments.files || []);
   const picked = await Promise.all(files.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
   imageAttachments.push(...picked);
-  elements.image.value = "";
+  elements.imageAttachments.value = "";
   updateImageSelectionSummary();
 }
 
 function clearSelectedImages() {
-  elements.image.value = "";
+  elements.imageAttachments.value = "";
   imageAttachments = [];
   updateImageSelectionSummary();
 }
@@ -272,12 +272,12 @@ async function handlePdfSelected(event) {
   const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === elements.model.value);
   if (!modelConfig?.supportsImages) {
     alert("The selected model does not support image uploads.");
-    elements.pdf.value = "";
+    elements.pdfAttachments.value = "";
     return;
   }
 
   setPdfStatus(`Rasterizing ${file.name}…`, true);
-  elements.pdf.disabled = true;
+  elements.pdfAttachments.disabled = true;
   elements.send.disabled = true;
 
   try {
@@ -314,8 +314,8 @@ async function handlePdfSelected(event) {
     setPdfStatus(`Failed to rasterize ${file.name}: ${error.message}`);
     alert(`Failed to rasterize PDF: ${error.message}`);
   } finally {
-    elements.pdf.value = "";
-    elements.pdf.disabled = false;
+    elements.pdfAttachments.value = "";
+    elements.pdfAttachments.disabled = false;
     elements.send.disabled = false;
   }
 }
@@ -457,8 +457,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderModelOptions();
   loadModelOptions();
   elements.model.addEventListener("change", updateModelControls);
-  elements.image.addEventListener("change", handleImagesSelected);
-  elements.pdf.addEventListener("change", handlePdfSelected);
+  elements.imageAttachments.addEventListener("change", handleImagesSelected);
+  elements.pdfAttachments.addEventListener("change", handlePdfSelected);
   elements.composer.addEventListener("submit", send);
   elements.input.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
