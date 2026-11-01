@@ -8,7 +8,6 @@
     --border: #e5e7eb;
     --accent: #0b57d0;
     --accent-soft: #e8f0ff;
-    --warning: #fff3cd;
 }
 
 * {
@@ -45,7 +44,7 @@ button {
 .banner {
     font-size: 13px;
     line-height: 1.4;
-    background: var(--warning);
+    background: #fff3cd;
     border: 1px solid #ffe69c;
     border-radius: 8px;
     padding: 10px;
