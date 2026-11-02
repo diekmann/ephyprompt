@@ -111,6 +111,14 @@ let activeRequest = null;
 let textAttachments = []; // { name, content } pairs;
 let imageAttachments = []; // { name, url } pairs; url is always a data URL
 
+function withHiddenMetadata(obj) {
+  Object.defineProperty(obj, "_hidden_only_render_abbreviated", {
+    value: true,
+    enumerable: false
+  });
+  return obj;
+}
+
 function createBubble(role) {
   const bubble = document.createElement("div");
   bubble.className = `bubble ${role}`;
@@ -128,14 +136,21 @@ function createUserBubble(content) {
   const body = document.createElement("div");
 
   for (const item of content) {
-    switch (item.type) {
-      case "text": {
+    switch (true) {
+      case item.type === "text" && item._hidden_only_render_abbreviated: {
+        const text = document.createElement("div");
+        text.className = "attachment-chip";
+        text.textContent = item.text.substring(0, 80) + (item.text.length > 80 ? "..." : "");
+        body.appendChild(text);
+        break;
+      }
+      case item.type == "text": {
         const text = document.createElement("div");
         text.textContent = item.text;
         body.appendChild(text);
         break;
       }
-      case "image_url": {
+      case item.type == "image_url": {
         const link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right");
         body.appendChild(link);
         break;
@@ -408,10 +423,10 @@ async function send(event) {
       type: "text",
       text: `Filename: ${attachment.name}`
     });
-    content.push({
+    content.push(withHiddenMetadata({
       type: "text",
       text: attachment.content
-    });
+    }));
   }
 
   for (const attachment of imageAttachments) {

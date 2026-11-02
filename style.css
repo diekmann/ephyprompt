@@ -192,6 +192,7 @@ button {
     padding: 6px 8px;
     border-radius: 999px;
     background: var(--accent-soft);
+    color: var(--text);
     font-size: 13px;
     line-height: 1.2;
     width: fit-content;
