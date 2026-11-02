@@ -131,8 +131,8 @@ function createBubble(role) {
   return bubble;
 }
 
-function createUserBubble(content) {
-  const bubble = createBubble("user");
+function createInputBubble(role, content) {
+  const bubble = createBubble(role);
   const body = document.createElement("div");
 
   for (const item of content) {
@@ -161,6 +161,14 @@ function createUserBubble(content) {
   bubble.appendChild(body);
   elements.messages.appendChild(bubble);
   bubble.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function createUserBubble(content) {
+  createInputBubble("user", content);
+}
+
+function createSystemBubble(content) {
+  createInputBubble("system", content);
 }
 
 // browsers don't like navigating to data URLs, so also show the image in-place.
@@ -530,4 +538,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  // DEMO CHANGE ME
+  messages.push({ role: "system", content: [{ type: "text", text: "You are a helpful assistant. Your name is Ephy." }] });
+  messages.push({ role: "user", content: [{ type: "text", text: "Demo" }] });
+  for (const message of messages) {
+    console.log("[ephyprompt]", "Rendering startup message", { role: message.role, content: message.content });
+    switch (message.role) {
+      case "system":
+        createSystemBubble(message.content);
+        break;
+      case "user":
+        createUserBubble(message.content);
+        break;
+      case "assistant":
+        alert("Assistant prefill not supported.");
+        break;
+    }
+  }
 });

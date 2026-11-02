@@ -8,6 +8,7 @@
     --border: #e5e7eb;
     --accent: #0b57d0;
     --accent-soft: #e8f0ff;
+    --system: #fff3cd;
 }
 
 * {
@@ -44,7 +45,7 @@ button {
 .banner {
     font-size: 13px;
     line-height: 1.4;
-    background: #fff3cd;
+    background: var(--system);
     border: 1px solid #ffe69c;
     border-radius: 8px;
     padding: 10px;
@@ -140,6 +141,13 @@ button {
     white-space: pre-wrap;
     line-height: 1.45;
     word-break: break-word;
+}
+
+
+.bubble.system {
+    align-self: flex-end;
+    background: var(--system);
+    color: black;
 }
 
 .bubble.user {
