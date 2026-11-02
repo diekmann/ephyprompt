@@ -28,6 +28,12 @@
     </label>
 
     <label class="field">
+      <span>Text-like Documents (allows selecting multiple)</span>
+      <input type="file" id="text-attachments" accept="text/plain, text/csv, text/markdown, text/json, .txt, .csv, .md, .json, .html, .css, .py, .js" multiple />
+      <div id="text-selection" class="attachment-selection-list" hidden></div>
+    </label>
+
+    <label class="field">
       <span>Images (allows selecting multiple)</span>
       <input type="file" id="image-attachments" accept="image/*" multiple />
       <div id="image-selection" class="attachment-selection-list" hidden></div>

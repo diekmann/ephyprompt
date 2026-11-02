@@ -93,6 +93,8 @@ const elements = {
   model: document.getElementById("model"),
   modelInfo: document.getElementById("model-info"),
   thinking: document.getElementById("thinking"),
+  textAttachments: document.getElementById("text-attachments"),
+  textSelection: document.getElementById("text-selection"),
   imageAttachments: document.getElementById("image-attachments"),
   imageSelection: document.getElementById("image-selection"),
   pdfAttachments: document.getElementById("pdf-attachments"),
@@ -106,6 +108,7 @@ const elements = {
 
 let messages = [];
 let activeRequest = null;
+let textAttachments = []; // { name, content } pairs;
 let imageAttachments = []; // { name, url } pairs; url is always a data URL
 
 function createBubble(role) {
@@ -214,6 +217,27 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
   assistantBubble.copyBtn.classList.toggle("visible", hasContent);
 }
 
+function updateTextSelectionSummary() {
+  if (textAttachments.length === 0) {
+    elements.textSelection.hidden = true;
+    return;
+  }
+
+  elements.textSelection.hidden = false;
+  elements.textSelection.replaceChildren();
+
+  textAttachments.forEach((attachment, index) => {
+    if (index > 0) {
+      elements.textSelection.appendChild(document.createTextNode(", "));
+    }
+    const chip = document.createElement("div");
+    chip.className = `attachment-chip`;
+    chip.textContent = `📄 ${attachment.name}`;
+
+    elements.textSelection.appendChild(chip);
+  });
+}
+
 function updateImageSelectionSummary() {
   if (imageAttachments.length === 0) {
     elements.imageSelection.hidden = true;
@@ -232,6 +256,14 @@ function updateImageSelectionSummary() {
 }
 
 // The file picker is just an import control: read the files once, append, reset.
+async function handleTextSelected() {
+  const files = Array.from(elements.textAttachments.files || []);
+  const picked = await Promise.all(files.map(async (file) => ({ name: file.name, content: await file.text() }))); // may contain gibberish on non-text files.
+  textAttachments.push(...picked);
+  elements.textAttachments.value = "";
+  updateTextSelectionSummary();
+}
+
 async function handleImagesSelected() {
   const files = Array.from(elements.imageAttachments.files || []);
   const picked = await Promise.all(files.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
@@ -240,7 +272,10 @@ async function handleImagesSelected() {
   updateImageSelectionSummary();
 }
 
-function clearSelectedImages() {
+function clearSelectedAttachments() {
+  elements.textAttachments.value = "";
+  textAttachments = [];
+  updateTextSelectionSummary();
   elements.imageAttachments.value = "";
   imageAttachments = [];
   updateImageSelectionSummary();
@@ -368,6 +403,17 @@ async function send(event) {
   const content = [];
   if (text) content.push({ type: "text", text });
 
+  for (const attachment of textAttachments) {
+    content.push({
+      type: "text",
+      text: `Filename: ${attachment.name}`
+    });
+    content.push({
+      type: "text",
+      text: attachment.content
+    });
+  }
+
   for (const attachment of imageAttachments) {
     content.push({
       type: "text",
@@ -380,9 +426,9 @@ async function send(event) {
   }
 
   messages.push({ role: "user", content });
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, imageCount: imageAttachments.length });
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, textAttachmentCount: textAttachments.length, imageCount: imageAttachments.length });
   elements.input.value = "";
-  clearSelectedImages();
+  clearSelectedAttachments();
   createUserBubble(content);
 
 
@@ -452,11 +498,12 @@ async function send(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  clearSelectedImages(); // clear browser trying to restore upload (firefox)
+  clearSelectedAttachments(); // clear browser trying to restore upload (firefox)
 
   renderModelOptions();
   loadModelOptions();
   elements.model.addEventListener("change", updateModelControls);
+  elements.textAttachments.addEventListener("change", handleTextSelected);
   elements.imageAttachments.addEventListener("change", handleImagesSelected);
   elements.pdfAttachments.addEventListener("change", handlePdfSelected);
   elements.composer.addEventListener("submit", send);
