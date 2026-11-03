@@ -24,6 +24,7 @@ STATIC_FILES = {
     "/favicon.ico": ("favicon.ico", "image/x-icon"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
+    "/startup-config.js": ("startup-config.js", "application/javascript; charset=utf-8"),
 }
 
 

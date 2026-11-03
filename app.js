@@ -539,9 +539,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // DEMO CHANGE ME
-  messages.push({ role: "system", content: [{ type: "text", text: "You are a helpful assistant. Your name is Ephy." }] });
-  messages.push({ role: "user", content: [{ type: "text", text: "Demo" }] });
+  const startupMessages = window.EPHYPROMPT_STARTUP_MESSAGES ?? [];
+  messages.push(...structuredClone(startupMessages));
   for (const message of messages) {
     console.log("[ephyprompt]", "Rendering startup message", { role: message.role, content: message.content });
     switch (message.role) {
