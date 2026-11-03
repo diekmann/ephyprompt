@@ -45,19 +45,11 @@ async function loadModelOptions() {
     }
     const pricePerMillionTokens = modelInfo.output_cost_per_token * 1000000;
     const maxInputTokens = modelInfo.max_input_tokens;
-    const tags = [];
-    if (modelInfo.supports_vision) {
-      tags.push("Bilder");
-    }
-    if (pricePerMillionTokens < 1) {
-      tags.push("günstig");
-    }
-    else if (pricePerMillionTokens > 10) {
-      tags.push("teuer");
-    }
-    if (maxInputTokens >= 1024 * 1024) {
-      tags.push("langer Kontext");
-    }
+    const tags = [
+      ...(modelInfo.supports_vision ? ["Bilder"] : []),
+      ...(pricePerMillionTokens < 1 ? ["günstig"] : pricePerMillionTokens > 10 ? ["teuer"] : []),
+      ...(maxInputTokens >= 1024 ** 2 ? ["langer Kontext"] : [])
+    ];
 
     let context;
     if (maxInputTokens >= 1024 * 1024) {
