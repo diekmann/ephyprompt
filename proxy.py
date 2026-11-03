@@ -13,7 +13,7 @@ import argparse
 
 import pymupdf
 
-TENSORX_URL = "https://api.tensorx.ai"
+API_URL = "https://api.tensorx.ai"  # good old OpenAI-compatible Chat Completions API
 API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set.")
@@ -120,7 +120,7 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?", 1)[0]
         if path == "/v1/model/info":
             self.fwd_request(urllib.request.Request(
-                    TENSORX_URL + path,
+                    API_URL + path,
                     headers={
                         "Authorization": f"Bearer {API_KEY}",
                         "Content-Type": "application/json"
@@ -186,7 +186,7 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
         print(f"[proxy] request summary: {summarize_payload(payload, body)}")
         self.fwd_request(urllib.request.Request(
-                TENSORX_URL + path,
+                API_URL + path,
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Authorization": f"Bearer {API_KEY}",
