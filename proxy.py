@@ -20,6 +20,7 @@ if not API_KEY:
 
 flag_parser = argparse.ArgumentParser()
 flag_parser.add_argument("--startup-config", type=str, default="startup-config.js", help="Startup configuration file")
+flag_parser.add_argument("--port", type=int, default=3000, help="Port to run the server on")
 
 args = flag_parser.parse_args()
 print(f"Startup config file: {args.startup_config}")
@@ -227,5 +228,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("EphyPrompt running at http://localhost:3000/")
-    HTTPServer(("localhost", 3000), Handler).serve_forever()
+    print(f"EphyPrompt running at http://localhost:{args.port}/")
+    HTTPServer(("localhost", args.port), Handler).serve_forever()
