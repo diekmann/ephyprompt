@@ -172,14 +172,6 @@ function createInputBubble(role, content) {
   bubble.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-function createUserBubble(content) {
-  createInputBubble("user", content);
-}
-
-function createSystemBubble(content) {
-  createInputBubble("system", content);
-}
-
 // browsers don't like navigating to data URLs, so also show the image in-place.
 function imagePreviewLink(dataUrlImage, text, imagePopupSide) {
   const link = document.createElement("a");
@@ -463,7 +455,7 @@ async function send(event) {
   console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, textAttachmentCount: textAttachments.length, imageCount: imageAttachments.length });
   elements.input.value = "";
   clearSelectedAttachments();
-  createUserBubble(content);
+  createInputBubble("user", content);
 
 
   const assistantBubble = createAssistantBubble();
@@ -556,10 +548,10 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("[ephyprompt]", "Rendering startup message", { role: message.role, content: message.content });
     switch (message.role) {
       case "system":
-        createSystemBubble(message.content);
+        createInputBubble("system", message.content);
         break;
       case "user":
-        createUserBubble(message.content);
+        createInputBubble("user", message.content);
         break;
       case "assistant":
         alert("Assistant prefill not supported.");
