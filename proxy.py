@@ -9,6 +9,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+import argparse
 
 import pymupdf
 
@@ -17,6 +18,12 @@ API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set.")
 
+flag_parser = argparse.ArgumentParser()
+flag_parser.add_argument("--startup-config", type=str, default="startup-config.js", help="Startup configuration file")
+
+args = flag_parser.parse_args()
+print(f"Startup config file: {args.startup_config}")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_FILES = {
     "/": ("ephyprompt.html", "text/html; charset=utf-8"),
@@ -24,7 +31,7 @@ STATIC_FILES = {
     "/favicon.ico": ("favicon.ico", "image/x-icon"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
-    "/startup-config.js": ("startup-config.js", "application/javascript; charset=utf-8"),
+    "/startup-config.js": (args.startup_config, "application/javascript; charset=utf-8"),
 }
 
 
