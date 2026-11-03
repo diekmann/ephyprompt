@@ -11,5 +11,6 @@ COPY --chown=app:app ephyprompt.html .
 COPY --chown=app:app favicon.ico .
 COPY --chown=app:app style.css .
 COPY --chown=app:app app.js .
+COPY --chown=app:app startup-config.js .
 EXPOSE 3000
 CMD ["python", "proxy.py"]
