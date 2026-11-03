@@ -46,15 +46,27 @@ async function loadModelOptions() {
     const pricePerMillionTokens = modelInfo.output_cost_per_token * 1000000;
     const maxInputTokens = modelInfo.max_input_tokens;
     const tags = [];
-    if (modelInfo.supports_vision) tags.push("Bilder");
-    if (pricePerMillionTokens < 1) tags.push("günstig");
-    else if (pricePerMillionTokens > 10) tags.push("teuer");
-    if (maxInputTokens >= 1024 * 1024) tags.push("langer Kontext");
+    if (modelInfo.supports_vision) {
+      tags.push("Bilder");
+    }
+    if (pricePerMillionTokens < 1) {
+      tags.push("günstig");
+    }
+    else if (pricePerMillionTokens > 10) {
+      tags.push("teuer");
+    }
+    if (maxInputTokens >= 1024 * 1024) {
+      tags.push("langer Kontext");
+    }
 
     let context;
-    if (maxInputTokens >= 1024 * 1024) context = `${Math.round(maxInputTokens / (1024 * 1024))}M`;
-    else if (maxInputTokens >= 1024) context = `${Math.round(maxInputTokens / 1024)}k`;
-    else context = String(maxInputTokens);
+    if (maxInputTokens >= 1024 * 1024) {
+      context = `${Math.round(maxInputTokens / (1024 * 1024))}M`;
+    } else if (maxInputTokens >= 1024) {
+      context = `${Math.round(maxInputTokens / 1024)}k`;
+    } else {
+      context = String(maxInputTokens);
+    }
 
     model.label = tags.length > 0 ? `${name} (${tags.join(", ")})` : name;
     model.supportsImages = Boolean(modelInfo.supports_vision);
@@ -79,13 +91,9 @@ function updateModelControls() {
 
   const supportsImages = Boolean(model?.supportsImages);
   elements.imageAttachments.disabled = !supportsImages;
-  elements.imageAttachments.title = supportsImages
-    ? "Attach one or more images"
-    : "Image uploads are not available for the selected model";
+  elements.imageAttachments.title = supportsImages ? "Attach one or more images" : "Image uploads are not available for the selected model";
   elements.pdfAttachments.disabled = !supportsImages;
-  elements.pdfAttachments.title = supportsImages
-    ? "Upload a PDF; each page will be rasterized to a PNG on the proxy"
-    : "Image uploads are not available for the selected model";
+  elements.pdfAttachments.title = supportsImages ? "Upload a PDF; each page will be rasterized to a PNG on the proxy" : "Image uploads are not available for the selected model";
 }
 
 
@@ -425,7 +433,9 @@ async function send(event) {
   }
 
   const content = [];
-  if (text) content.push({ type: "text", text });
+  if (text) {
+    content.push({ type: "text", text });
+  }
 
   for (const attachment of textAttachments) {
     content.push({
