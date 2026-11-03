@@ -1,5 +1,6 @@
 "use strict";
 
+// TODO: use /v1/models to enumerate models.
 const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek-v4.1-flash Loading…", supportsImages: true },
   { id: "deepseek/deepseek-v4-flash-0731", label: "deepseek-v4-flash Loading…" },
