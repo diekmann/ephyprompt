@@ -9,7 +9,7 @@ const MODEL_OPTIONS = [
   { id: "z-ai/glm-5.3-flash", label: "glm-5.3-flash Loading…" },
   { id: "minimax/minimax-m3", label: "minimax-m3 Loading…" },
   { id: "minimax/minimax-m3.1-flash", label: "minimax-m3.1-flash Loading…" },
-  { id: "moonshotai/kimi-k2.7-code", label: "kimi-k2.7-code Loading…" },
+  { id: "moonshotai/kimi-k3.1-pro", label: "kimi-k3.1-pro Loading…" },
   { id: "moonshotai/kimi-k3", label: "kimi-k3 Loading…" },
   { id: "qwen/qwen3.8-2.4t-a95b", label: "qwen3.8-2.4t-a95b Loading…" },
   { id: "qwen/qwen3.8-27b", label: "qwen3.8-27b Loading…" },
