@@ -7,7 +7,6 @@ const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4-pro-0813", label: "deepseek-v4-pro Loading…" },
   { id: "z-ai/glm-5.3", label: "glm-5.3 Loading…" },
   { id: "z-ai/glm-5.3-flash", label: "glm-5.3-flash Loading…" },
-  { id: "minimax/minimax-m3", label: "minimax-m3 Loading…" },
   { id: "minimax/minimax-m3.1-flash", label: "minimax-m3.1-flash Loading…" },
   { id: "moonshotai/kimi-k3.1-pro", label: "kimi-k3.1-pro Loading…" },
   { id: "moonshotai/kimi-k3", label: "kimi-k3 Loading…" },
