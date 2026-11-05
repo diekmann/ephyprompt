@@ -37,17 +37,14 @@ STATIC_FILES = {
 }
 
 
-def rasterize_pdf(pdf_bytes, original_filename, dpi):
+def rasterize_pdf(pdf_bytes, original_filename, width):
     with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
         fname = os.path.splitext(os.path.basename(original_filename))[0] or "document"
         pages = []
         for index in range(doc.page_count):
             page = doc.load_page(index)
-            if dpi == 'auto':
-                zoom = 640 / page.rect.width
-                pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
-            else:
-                pix = page.get_pixmap(dpi=dpi)
+            zoom = int(width) / page.rect.width
+            pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
             png_bytes = pix.tobytes("png")
             name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.png"
             data_url = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
@@ -151,14 +148,10 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Empty PDF payload")
 
                 original_filename = self.headers.get("X-Filename", "")
-                dpi_raw = self.headers.get("X-DPI", "").strip()
-                try:
-                    dpi = max(36, min(600, int(dpi_raw)))
-                except ValueError:
-                    dpi = 'auto'
-                print(f"[proxy] POST {path} filename={original_filename} dpi={dpi} bytes={len(pdf_bytes)}")
+                width = self.headers.get("X-Width") or "640"
+                print(f"[proxy] POST {path} filename={original_filename} width={width} bytes={len(pdf_bytes)}")
 
-                result = rasterize_pdf(pdf_bytes, original_filename, dpi)
+                result = rasterize_pdf(pdf_bytes, original_filename, width)
                 body = json.dumps(result).encode("utf-8")
 
                 self.send_json(200, body)

@@ -70,12 +70,16 @@ button {
     opacity: 0.5;
 }
 
-.attachment-selection-list {
+.leftbar-status-helper {
     margin-top: 6px;
     font-size: 12px;
     line-height: 1.4;
     color: var(--muted);
     word-break: break-word;
+}
+.leftbar-status-helper input[type="text"] {
+    width: 5ch;
+    font: inherit;
 }
 
 .attachment-chip {
@@ -257,7 +261,7 @@ button {
     }
 }
 
-.attachment-selection-list.pdf-status {
+.leftbar-status-helper.pdf-status {
     display: inline-flex;
     align-items: center;
     gap: 8px;

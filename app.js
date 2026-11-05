@@ -12,7 +12,7 @@ const elements = {
   imageSelection: document.getElementById("image-selection"),
   pdfAttachments: document.getElementById("pdf-attachments"),
   pdfStatus: document.getElementById("pdf-status"),
-  pdfDpi: document.getElementById("pdf-dpi"),
+  pdfWidth: document.getElementById("pdf-width"),
   messages: document.getElementById("messages"),
   composer: document.getElementById("composer"),
   input: document.getElementById("input"),
@@ -266,14 +266,14 @@ async function handlePdfSelected(event) {
   elements.send.disabled = true;
 
   try {
-    const dpi = elements.pdfDpi.value;
-    console.log("[ephyprompt]", "PDF rasterization request. DPI:", dpi, "X-Filename:", file.name);
+    const width = elements.pdfWidth.value;
+    console.log("[ephyprompt]", "PDF rasterization request. Width:", width, "X-Filename:", file.name);
     const response = await fetch("/rasterize-pdf", {
       method: "POST",
       headers: {
         "Content-Type": "application/pdf",
         "X-Filename": file.name,
-        "X-DPI": String(dpi)
+        "X-Width": String(width)
       },
       body: file
     });
@@ -292,7 +292,7 @@ async function handlePdfSelected(event) {
     imageAttachments.push(...pages);
     updateImageSelectionSummary();
 
-    setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${dpi} DPI)`);
+    setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${width} px)`);
     console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: pages.length });
   } catch (error) {
     console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });

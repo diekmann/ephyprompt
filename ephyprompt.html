@@ -19,7 +19,7 @@
     <label class="field">
       <span>Model</span>
       <select id="model"></select>
-      <div id="model-info" class="attachment-selection-list"></div>
+      <div id="model-info" class="leftbar-status-helper"></div>
     </label>
 
     <label class="checkbox">
@@ -30,32 +30,25 @@
     <label class="field">
       <span>Text-like Documents (allows selecting multiple)</span>
       <input type="file" id="text-attachments" accept="text/plain, text/csv, text/markdown, text/json, .txt, .csv, .md, .json, .html, .css, .py, .js" multiple />
-      <div id="text-selection" class="attachment-selection-list" hidden></div>
+      <div id="text-selection" class="leftbar-status-helper" hidden></div>
     </label>
 
     <label class="field">
       <span>Images (allows selecting multiple)</span>
       <input type="file" id="image-attachments" accept="image/*" multiple />
-      <div id="image-selection" class="attachment-selection-list" hidden></div>
+      <div id="image-selection" class="leftbar-status-helper" hidden></div>
     </label>
 
     <label class="field">
       <span>PDF (rasterized and attached as images)</span>
       <input type="file" id="pdf-attachments" accept="application/pdf" />
-      <div id="pdf-status" class="attachment-selection-list pdf-status" hidden></div>
+      <div id="pdf-status" class="leftbar-status-helper pdf-status" hidden></div>
     </label>
 
-    <label class="field">
-      <span>PDF rasterization DPI</span>
-      <select id="pdf-dpi" autocomplete="off">
-        <option value="auto" selected>auto</option>
-        <option value="72">72 (default, small)</option>
-        <option value="100">100</option>
-        <option value="150">150 (medium)</option>
-        <option value="200">200</option>
-        <option value="300">300 (high)</option>
-      </select>
-    </label>
+    <div class="leftbar-status-helper">
+      PDF rasterization width (px):
+      <input type="text" id="pdf-width" value="640" autocomplete="off" />
+    </div>
   </aside>
 
   <main class="chat">
