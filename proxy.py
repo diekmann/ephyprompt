@@ -31,6 +31,7 @@ STATIC_FILES = {
     "/ephyprompt.html": ("ephyprompt.html", "text/html; charset=utf-8"),
     "/favicon.ico": ("favicon.ico", "image/x-icon"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
+    "/model-discovery.js": ("model-discovery.js", "application/javascript; charset=utf-8"),
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
     "/startup-config.js": (args.startup_config, "application/javascript; charset=utf-8"),
 }
