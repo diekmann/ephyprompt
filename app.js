@@ -1,5 +1,7 @@
 "use strict";
 
+import { loadModelOptions, MODEL_OPTIONS } from "./model-discovery.js";
+
 const elements = {
   model: document.getElementById("model"),
   modelInfo: document.getElementById("model-info"),

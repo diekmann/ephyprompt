@@ -2,7 +2,7 @@
 
 
 // TODO: use /v1/models to enumerate models.
-const MODEL_OPTIONS = [
+export const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek-v4.1-flash Loading…", supportsImages: true },
   { id: "deepseek/deepseek-v4-flash-0731", label: "deepseek-v4-flash Loading…" },
   { id: "deepseek/deepseek-v4-pro-0813", label: "deepseek-v4-pro Loading…" },
@@ -15,7 +15,7 @@ const MODEL_OPTIONS = [
   { id: "qwen/qwen3.8-27b", label: "qwen3.8-27b Loading…" },
 ];
 
-async function loadModelOptions() {
+export async function loadModelOptions() {
   const models = new Map();
   try {
     const response = await fetch("/v1/model/info");
