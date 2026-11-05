@@ -116,7 +116,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path == "/v1/model/info":
+        if path in ("/v1/model/info", "/v1/models"):
             self.fwd_request(urllib.request.Request(
                     API_URL + path,
                     headers={

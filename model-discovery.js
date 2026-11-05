@@ -1,21 +1,47 @@
 "use strict";
 
 
-// TODO: use /v1/models to enumerate models.
+// Fallback while /v1/models is loading, and in case it cannot be fetched at all.
 export const MODEL_OPTIONS = [
-  { id: "deepseek/deepseek-v4.1-flash", label: "deepseek-v4.1-flash Loading…", supportsImages: true },
-  { id: "deepseek/deepseek-v4-flash-0731", label: "deepseek-v4-flash Loading…" },
-  { id: "deepseek/deepseek-v4-pro-0813", label: "deepseek-v4-pro Loading…" },
-  { id: "z-ai/glm-5.3", label: "glm-5.3 Loading…" },
-  { id: "z-ai/glm-5.3-flash", label: "glm-5.3-flash Loading…" },
-  { id: "minimax/minimax-m3.1-flash", label: "minimax-m3.1-flash Loading…" },
-  { id: "moonshotai/kimi-k3.1-pro", label: "kimi-k3.1-pro Loading…" },
-  { id: "moonshotai/kimi-k3", label: "kimi-k3 Loading…" },
-  { id: "qwen/qwen3.8-2.4t-a95b", label: "qwen3.8-2.4t-a95b Loading…" },
-  { id: "qwen/qwen3.8-27b", label: "qwen3.8-27b Loading…" },
+  { id: "deepseek/deepseek-v4.1-flash", label: "deepseek/deepseek-v4.1-flash Loading…", supportsImages: true },
 ];
 
+// Enumerates the available models via /v1/models and populates MODEL_OPTIONS.
+// On failure, the fallback entry in MODEL_OPTIONS is kept.
+async function loadModels() {
+  try {
+    const response = await fetch("/v1/models");
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+    const payload = await response.json();
+    if (!Array.isArray(payload?.data)) {
+      throw new Error("unexpected response shape from /v1/models");
+    }
+    const models = [];
+    for (const entry of payload.data) { //  model ids can appear more than once; keep the first entry per id.
+      if (!entry?.id || models.some((model) => model.id === entry.id)) {
+        continue;
+      }
+      models.push({ id: entry.id, label: `${entry.id} Loading…`, supportsImages: false });
+    }
+    models.sort((a, b) => a.id.localeCompare(b.id));
+
+    if (models.length === 0) {
+      console.warn("[ephyprompt]", "/v1/models returned no models; keeping fallback options");
+      return;
+    }
+    MODEL_OPTIONS.length = 0; // Replace contents in place so the already-imported array reference stays valid.
+    MODEL_OPTIONS.push(...models);
+    console.log("[ephyprompt]", "Models loaded", { modelCount: models.length });
+  } catch (error) {
+    console.error("[ephyprompt]", "Failed to load models", { error: error.message });
+  }
+}
+
 export async function loadModelOptions() {
+  await loadModels();
+
   const models = new Map();
   try {
     const response = await fetch("/v1/model/info");
@@ -38,9 +64,8 @@ export async function loadModelOptions() {
 
   for (const model of MODEL_OPTIONS) {
     const modelInfo = models.get(model.id);
-    const name = model.id.split("/").pop();
-    if (!modelInfo) {
-      model.label = `${name} (❌ Modell wird nicht mehr unterstützt)`;
+    if (!modelInfo) { //  /v1/model/info failed entirely, or this model has no info entry.
+      model.label = `${model.id} (❌ Modellinfos nicht verfügbar)`;
       continue;
     }
     const pricePerMillionTokens = modelInfo.output_cost_per_token * 1000000;
@@ -60,7 +85,7 @@ export async function loadModelOptions() {
       context = String(maxInputTokens);
     }
 
-    model.label = tags.length > 0 ? `${name} (${tags.join(", ")})` : name;
+    model.label = tags.length > 0 ? `${model.id} (${tags.join(", ")})` : model.id;
     model.supportsImages = Boolean(modelInfo.supports_vision);
     model.info = `$${pricePerMillionTokens.toFixed(2)}/1M tokens, ${context} context`;
   }
