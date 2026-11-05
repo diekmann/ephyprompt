@@ -388,6 +388,7 @@ async function send(event) {
 
   let assistantText = "";
   let assistantThinking = "";
+  let lastChunk = null; // the most recent parsed SSE chunk; normally, the final one has API metadata, like usage information.
   activeRequest = new AbortController();
   setSendButtonReceiving(true);
   try {
@@ -416,10 +417,21 @@ async function send(event) {
 
 
     function processReceived(data) {
+      lastChunk = data;
+
       const delta = data.choices?.[0]?.delta;
       if (delta?.content) assistantText += delta.content;
       const thinkingDelta = delta?.reasoning_content ?? delta?.reasoning;
       if (thinkingDelta) assistantThinking += thinkingDelta;
+
+      const finishReason = data.choices?.[0]?.finish_reason;
+      if (finishReason) {
+        console.log("[ephyprompt]", "Stream finish reason", finishReason);
+        if (finishReason !== "stop") {
+          console.warn("[ephyprompt]", "Stream did not finish normally", { finishReason });
+        }
+      }
+
       updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
     }
 
@@ -432,6 +444,8 @@ async function send(event) {
       sseBuffer = processSSEBuffer(sseBuffer + decoder.decode(value, { stream: true }), processReceived);
     }
     processSSEBuffer(sseBuffer + decoder.decode(), processReceived);
+
+    console.log("[ephyprompt]", "Final stream chunk", lastChunk);
 
     const reply = assistantText || "(no response)";
     updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
