@@ -6,20 +6,27 @@ export const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek/deepseek-v4.1-flash Loading…", supportsImages: true },
 ];
 
+async function fetchJsonArray(path) {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  }
+  const payload = await response.json();
+  if (!Array.isArray(payload?.data)) {
+    throw new Error(`unexpected response shape from ${path}`);
+  }
+  return payload.data;
+}
+
 // Enumerates the available models via /v1/models and populates MODEL_OPTIONS.
 // On failure, the fallback entry in MODEL_OPTIONS is kept.
 async function loadModels() {
+  let entries;
   try {
-    const response = await fetch("/v1/models");
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-    }
-    const payload = await response.json();
-    if (!Array.isArray(payload?.data)) {
-      throw new Error("unexpected response shape from /v1/models");
-    }
+    entries = await fetchJsonArray("/v1/models");
+
     const models = [];
-    for (const entry of payload.data) { //  model ids can appear more than once; keep the first entry per id.
+    for (const entry of entries) { // model ids can appear more than once; keep the first entry per id.
       if (!entry?.id || models.some((model) => model.id === entry.id)) {
         continue;
       }
@@ -44,15 +51,7 @@ export async function loadModelOptions() {
 
   const models = new Map();
   try {
-    const response = await fetch("/v1/model/info");
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-    }
-    const payload = await response.json();
-    if (!Array.isArray(payload?.data)) {
-      throw new Error("unexpected response shape from /v1/model/info");
-    }
-    for (const entry of payload.data) { //  model_name can appear more than once; keep the first entry per name.
+    for (const entry of await fetchJsonArray("/v1/model/info")) { // model_name can appear more than once; keep the first entry per name.
       if (entry?.model_name && !models.has(entry.model_name)) {
         models.set(entry.model_name, entry.model_info ?? {});
       }
@@ -64,7 +63,7 @@ export async function loadModelOptions() {
 
   for (const model of MODEL_OPTIONS) {
     const modelInfo = models.get(model.id);
-    if (!modelInfo) { //  /v1/model/info failed entirely, or this model has no info entry.
+    if (!modelInfo) { // /v1/model/info failed entirely, or this model has no info entry.
       model.label = `${model.id} (❌ Modellinfos nicht verfügbar)`;
       continue;
     }
@@ -90,4 +89,3 @@ export async function loadModelOptions() {
     model.info = `$${pricePerMillionTokens.toFixed(2)}/1M tokens, ${context} context`;
   }
 }
-
