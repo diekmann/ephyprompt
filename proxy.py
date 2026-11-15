@@ -13,6 +13,9 @@ import argparse
 
 import pymupdf
 
+print(f"Using pymupdf {pymupdf.__version__}")
+pymupdf.use_layout(False) # Slightly harden by disabling this.
+
 API_URL = "https://api.tensorx.ai"  # good old OpenAI-compatible Chat Completions API
 API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 if not API_KEY:
