@@ -2,7 +2,7 @@
 
 
 // Fallback while /v1/models is loading, and in case it cannot be fetched at all.
-export const MODEL_OPTIONS = [
+export let MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek/deepseek-v4.1-flash Loading…", supportsImages: true },
 ];
 
@@ -61,12 +61,17 @@ export async function loadModelOptions() {
     console.error("[ephyprompt]", "Failed to load model info", { error: error.message });
   }
 
+  MODEL_OPTIONS = MODEL_OPTIONS.filter(model => {
+    const modelInfo = models.get(model.id);
+    if (!modelInfo || modelInfo.mode !== "chat") {
+      console.log(`Filtering out model: ${model.id}`, modelInfo ?? "(No model info available)");
+      return false;
+    }
+    return true;
+  });
+
   for (const model of MODEL_OPTIONS) {
     const modelInfo = models.get(model.id);
-    if (!modelInfo) { // /v1/model/info failed entirely, or this model has no info entry.
-      model.label = `${model.id} (❌ Modellinfos nicht verfügbar)`;
-      continue;
-    }
     const pricePerMillionTokens = modelInfo.output_cost_per_token * 1000000;
     const maxInputTokens = modelInfo.max_input_tokens;
     const tags = [
