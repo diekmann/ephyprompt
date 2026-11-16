@@ -329,6 +329,7 @@ function processSSEBuffer(buffer, processData) {
       processData(JSON.parse(dataLine));
     } catch (error) {
       console.log("[ephyprompt]", "Failed to parse SSE payload", { dataLine, error: error.message });
+      alert(error);
     }
   }
   return remainder;

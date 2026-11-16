@@ -43,6 +43,7 @@ async function loadModels() {
     console.log("[ephyprompt]", "Models loaded", { modelCount: models.length });
   } catch (error) {
     console.error("[ephyprompt]", "Failed to load models", { error: error.message });
+    alert(error);
   }
 }
 
@@ -59,6 +60,7 @@ export async function loadModelOptions() {
     console.log("[ephyprompt]", "Model info loaded", { modelCount: models.size });
   } catch (error) {
     console.error("[ephyprompt]", "Failed to load model info", { error: error.message });
+    alert(error);
   }
 
   MODEL_OPTIONS = MODEL_OPTIONS.filter(model => {
