@@ -76,7 +76,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_csp(self):
         """Main Content Security Policy for the main page."""
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none';")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types 'none';")
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""

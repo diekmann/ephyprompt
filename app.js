@@ -125,6 +125,15 @@ async function copyToClipboard(text, button) {
   }
 }
 
+function thinkingAnimation(status) {
+  status.replaceChildren();
+  const dot = document.createElement("span");
+  dot.className = "dot";
+  const text = document.createElement("span");
+  text.textContent = "Thinking…";
+  status.append(dot, text);
+}
+
 function createAssistantBubble() {
   const bubble = createBubble("assistant");
 
@@ -140,7 +149,7 @@ function createAssistantBubble() {
 
   const status = document.createElement("div");
   status.className = "assistant-status visible";
-  status.innerHTML = '<span class="dot"></span><span>Thinking…</span>';
+  thinkingAnimation(status);
 
   const content = document.createElement("div");
 
@@ -161,7 +170,11 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
   assistantBubble.content.textContent = content;
 
   assistantBubble.status.classList.toggle("visible", loading);
-  assistantBubble.status.innerHTML = loading ? '<span class="dot"></span><span>Thinking…</span>' : '';
+  if (loading) {
+    thinkingAnimation(assistantBubble.status);
+  } else {
+    assistantBubble.status.replaceChildren();
+  }
 
   const hasContent = content && String(content).trim().length > 0;
   assistantBubble.copyBtn.classList.toggle("visible", hasContent);
