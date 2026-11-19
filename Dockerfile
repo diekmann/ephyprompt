@@ -7,13 +7,8 @@ USER app
 RUN /opt/venv/bin/pip install --no-cache-dir --upgrade pip pymupdf
 ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=app:app proxy.py .
-COPY --chown=app:app ephyprompt.html .
-COPY --chown=app:app favicon.ico .
-COPY --chown=app:app style.css .
-COPY --chown=app:app model-discovery.js .
-COPY --chown=app:app pdf-rasterize.js .
-COPY --chown=app:app app.js .
-COPY --chown=app:app startup-config.js .
+COPY --chown=app:app ephyprompt.html favicon.ico style.css .
+COPY --chown=app:app model-discovery.js pdf-rasterize.js app.js startup-config.js .
 COPY --chown=app:app node_modules/ ./node_modules/
 EXPOSE 3000
 CMD ["python", "proxy.py"]
