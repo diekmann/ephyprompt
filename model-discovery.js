@@ -35,14 +35,14 @@ async function loadModels() {
     models.sort((a, b) => a.id.localeCompare(b.id));
 
     if (models.length === 0) {
-      console.warn("[ephyprompt]", "/v1/models returned no models; keeping fallback options");
+      console.warn("[model-discovery]", "/v1/models returned no models; keeping fallback options");
       return;
     }
     MODEL_OPTIONS.length = 0; // Replace contents in place so the already-imported array reference stays valid.
     MODEL_OPTIONS.push(...models);
-    console.log("[ephyprompt]", "Models loaded", { modelCount: models.length });
+    console.log("[model-discovery]", "Models loaded", { modelCount: models.length });
   } catch (error) {
-    console.error("[ephyprompt]", "Failed to load models", { error: error.message });
+    console.error("[model-discovery]", "Failed to load models", { error: error.message });
     alert(error);
   }
 }
@@ -57,16 +57,16 @@ export async function loadModelOptions() {
         models.set(entry.model_name, entry.model_info ?? {});
       }
     }
-    console.log("[ephyprompt]", "Model info loaded", { modelCount: models.size });
+    console.log("[model-discovery]", "Model info loaded", { modelCount: models.size });
   } catch (error) {
-    console.error("[ephyprompt]", "Failed to load model info", { error: error.message });
+    console.error("[model-discovery]", "Failed to load model info", { error: error.message });
     alert(error);
   }
 
   MODEL_OPTIONS = MODEL_OPTIONS.filter(model => {
     const modelInfo = models.get(model.id);
     if (!modelInfo || modelInfo.mode !== "chat") {
-      console.log(`Filtering out model: ${model.id}`, modelInfo ?? "(No model info available)");
+      console.log(`[model-discovery] Filtering out model: ${model.id}`, modelInfo ?? "(No model info available)");
       return false;
     }
     return true;

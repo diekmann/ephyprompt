@@ -27,8 +27,8 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 ## Properties
 
 * If the external LLM provider has good privacy and does not retain any data, EphyPrompt is 100% private and retains 0 data.
-* EphyPrompt is one single-page website. And a tiny local proxy due to CORS restrictions, for PDF rasterization, and to set a Content Security Policy.
-* EphyPrompt relies on a minimal set of external modules (only `pymupdf`) and does not include external data. This makes it extremely easy to audit.
+* EphyPrompt is one single-page website. And a tiny local proxy due to CORS restrictions and to set a Content Security Policy.
+* EphyPrompt relies on a minimal set of external modules (only `mupdf.js`) and does not include external data. This makes it extremely easy to audit.
 * EphyPrompt can be easily run on common client operating systems.
 * Data entered into EphyPrompt is only sent to your LLM API; it otherwise never leaves EphyPrompt.
 * Metadata is only logged locally in the local proxy to STDOUT and to the JavaScript console. Never explicitly persisted or stored.
@@ -43,21 +43,21 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 ## Usage
 
 ```sh
-podman build -t ephyprompt .
+podman build -t ephyprompt --security-opt no-new-privileges .
 ```
 
 ```sh
-podman run --rm -it --network host -e OPENAI_API_KEY=XXX ephyprompt
+podman run --rm -it --network host --security-opt no-new-privileges --cap-drop=all -e OPENAI_API_KEY=XXX ephyprompt
 ```
 
 The `--network host` is deliberate, since native EphyPrompt binds only to localhost.
 
-Also runs on Windows or any other OS with python3 and `pymupdf` installed.
+Also runs on Windows or any other OS with python3 installed.
 
 ## Development
 
 ```sh
-python3 -m venv .venv
-source ./.venv/bin/activate
-pip install --upgrade pymupdf
+npm install mupdf
 ```
+
+Or download directly TODO. Or I submit.
