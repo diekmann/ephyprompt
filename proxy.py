@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A tiny proxy to make requests to the LLM API, since the API may not accept request from a browser due to CORS. Also rasterizes pdfs."""
+"""A tiny proxy to make requests to the LLM API, since the API may not accept request from a browser due to CORS."""
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from collections import Counter
@@ -11,10 +11,6 @@ import urllib.error
 import urllib.request
 import argparse
 
-import pymupdf
-
-print(f"Using pymupdf {pymupdf.__version__}")
-pymupdf.use_layout(False) # Slightly harden by disabling this.
 
 API_URL = "https://api.tensorx.ai"  # good old OpenAI-compatible Chat Completions API
 API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
@@ -35,24 +31,13 @@ STATIC_FILES = {
     "/favicon.ico": ("favicon.ico", "image/x-icon"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/model-discovery.js": ("model-discovery.js", "application/javascript; charset=utf-8"),
+    "/pdf-rasterize.js": ("pdf-rasterize.js", "application/javascript; charset=utf-8"),
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
     "/startup-config.js": (args.startup_config, "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf.js": ("node_modules/mupdf/dist/mupdf.js", "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf-wasm.js": ("node_modules/mupdf/dist/mupdf-wasm.js", "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf-wasm.wasm": ("node_modules/mupdf/dist/mupdf-wasm.wasm", "application/wasm"),
 }
-
-
-def rasterize_pdf(pdf_bytes, original_filename, width):
-    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
-        fname = os.path.splitext(os.path.basename(original_filename))[0] or "document"
-        pages = []
-        for index in range(doc.page_count):
-            page = doc.load_page(index)
-            zoom = int(width) / page.rect.width
-            pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
-            png_bytes = pix.tobytes("png")
-            name = f"{fname}-page-{str(index + 1).zfill(len(str(doc.page_count)))}.png"
-            data_url = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
-            pages.append({"name": name, "url": data_url})
-        return {"pages": pages}
 
 def summarize_payload(payload, raw_body):
     messages = payload.get("messages") or []
@@ -76,7 +61,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_csp(self):
         """Main Content Security Policy for the main page."""
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types 'none';")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types 'none';")
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
@@ -142,27 +127,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(403, "Refusing non-local request")
             raise RuntimeError("Received non-local request. This is unexpected usage.")
         path = self.path
-
-        if path == "/rasterize-pdf":
-            try:
-                length = int(self.headers.get("Content-Length", 0))
-                pdf_bytes = self.rfile.read(length) if length > 0 else b""
-                if not pdf_bytes:
-                    raise ValueError("Empty PDF payload")
-
-                original_filename = self.headers.get("X-Filename", "")
-                width = self.headers.get("X-Width") or "640"
-                print(f"[proxy] POST {path} filename={original_filename} width={width} bytes={len(pdf_bytes)}")
-
-                result = rasterize_pdf(pdf_bytes, original_filename, width)
-                body = json.dumps(result).encode("utf-8")
-
-                self.send_json(200, body)
-            except Exception as e:
-                print(f"[proxy] rasterize-pdf failed: {e}", file=sys.stderr)
-                error_body = json.dumps({"error": str(e)}).encode("utf-8")
-                self.send_json(500, error_body)
-            return
 
         if path != "/v1/chat/completions":
             self.send_error(404, "Not Found")

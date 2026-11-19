@@ -37,7 +37,7 @@ function updateModelControls() {
   elements.imageAttachments.disabled = !supportsImages;
   elements.imageAttachments.title = supportsImages ? "Attach one or more images" : "Image uploads are not available for the selected model";
   elements.pdfAttachments.disabled = !supportsImages;
-  elements.pdfAttachments.title = supportsImages ? "Upload a PDF; each page will be rasterized to a PNG on the proxy" : "Image uploads are not available for the selected model";
+  elements.pdfAttachments.title = supportsImages ? "Upload a PDF; each page will be rasterized to a PNG" : "Image uploads are not available for the selected model";
 }
 
 
@@ -278,26 +278,14 @@ async function handlePdfSelected(event) {
   elements.pdfAttachments.disabled = true;
   elements.send.disabled = true;
 
+
   try {
-    const width = elements.pdfWidth.value;
-    console.log("[ephyprompt]", "PDF rasterization request. Width:", width, "X-Filename:", file.name);
-    const response = await fetch("/rasterize-pdf", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/pdf",
-        "X-Filename": file.name,
-        "X-Width": String(width)
-      },
-      body: file
-    });
+    console.log("Lazily oading mupdf.js and WASM which may take a while");
+    const { rasterizePDF } = await import("./pdf-rasterize.js");
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || `HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    const pages = Array.isArray(result?.pages) ? result.pages : [];
+    console.log("[ephyprompt]", "PDF rasterization. Width:", elements.pdfWidth.value, "Filename:", file.name);
+    const pdfAsDataURLs = rasterizePDF(await file.arrayBuffer(), file.name, elements.pdfWidth.value)
+    const pages = Array.isArray(pdfAsDataURLs?.pages) ? pdfAsDataURLs.pages : [];
     if (pages.length === 0) {
       throw new Error("Proxy returned no pages");
     }
@@ -305,11 +293,10 @@ async function handlePdfSelected(event) {
     imageAttachments.push(...pages);
     updateImageSelectionSummary();
 
-    setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${width} px)`);
+    setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${elements.pdfWidth.value} px)`);
     console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: pages.length });
   } catch (error) {
     console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });
-    setPdfStatus(`Failed to rasterize ${file.name}: ${error.message}`);
     alert(`Failed to rasterize PDF: ${error.message}`);
   } finally {
     elements.pdfAttachments.value = "";
@@ -478,6 +465,7 @@ async function send(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("Ephyprompt starting");
   clearSelectedAttachments(); // clear browser trying to restore upload (firefox)
 
   renderModelOptions();
