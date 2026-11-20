@@ -92,14 +92,6 @@ class Handler(BaseHTTPRequestHandler):
         self.send_api_headers()
         self.end_headers()
 
-    def serve_static(self, content, content_type):
-        self.send_response(200)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(content)))
-        self.send_csp()
-        self.end_headers()
-        self.wfile.write(content)
-
     def do_GET(self):
         path = self.path
         if path in ("/v1/model/info", "/v1/models"):
@@ -118,7 +110,12 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(404, "Not Found")
             return
         content, content_type = entry
-        self.serve_static(content, content_type )
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(content)))
+        self.send_csp()
+        self.end_headers()
+        self.wfile.write(content)
 
     def do_POST(self):
         if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin requests only.
