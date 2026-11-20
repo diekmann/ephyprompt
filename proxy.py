@@ -66,14 +66,16 @@ class Handler(BaseHTTPRequestHandler):
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none';")
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox;")
+        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("Referrer-Policy", "no-referrer")
 
     def send_json(self, status: int, body: bytes):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_api_headers()
+        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
 
@@ -112,7 +114,7 @@ class Handler(BaseHTTPRequestHandler):
                         "Content-Type": "application/json"
                     },
                     method="GET"
-                ))
+                ), cache=True)  # hack to speet things up: models change rarely, let the browser cache!
             return
 
         entry = STATIC_FILES.get(path)
@@ -156,7 +158,7 @@ class Handler(BaseHTTPRequestHandler):
                 method="POST"
             ))
 
-    def fwd_request(self, req: urllib.request.Request):
+    def fwd_request(self, req: urllib.request.Request, cache: bool = False):
         try:
             with urllib.request.urlopen(req) as resp:
                 status = resp.getcode()
@@ -166,6 +168,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(status)
                 self.send_header("Content-Type", content_type)
                 self.send_api_headers()
+                self.send_header("Cache-Control", "no-store" if not cache else "max-age=3600")
                 self.end_headers()
 
                 while True:
