@@ -146,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(400, json.dumps({"error": str(e)}).encode("utf-8"))
             return
 
-        print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages', []))}")
+        print(f"[proxy] POST {path} model={payload.get('model')} stream={payload.get('stream')} messages={len(payload.get('messages') or [])}")
         print(f"[proxy] request summary: {summarize_payload(payload, body)}")
         self.fwd_request(urllib.request.Request(
                 API_URL + path,
