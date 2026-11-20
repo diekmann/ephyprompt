@@ -25,18 +25,26 @@ args = flag_parser.parse_args()
 print(f"Startup config file: {args.startup_config}")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def load_file(filename: str) -> bytes:
+    file_path = os.path.join(BASE_DIR, filename)
+    if not os.path.isfile(file_path):
+        raise RuntimeErro(f"{filename} not found")
+    with open(file_path, "rb") as fh:
+        return fh.read()
+
 STATIC_FILES = {
-    "/": ("ephyprompt.html", "text/html; charset=utf-8"),
-    "/ephyprompt.html": ("ephyprompt.html", "text/html; charset=utf-8"),
-    "/favicon.ico": ("favicon.ico", "image/x-icon"),
-    "/style.css": ("style.css", "text/css; charset=utf-8"),
-    "/model-discovery.js": ("model-discovery.js", "application/javascript; charset=utf-8"),
-    "/pdf-rasterize.js": ("pdf-rasterize.js", "application/javascript; charset=utf-8"),
-    "/app.js": ("app.js", "application/javascript; charset=utf-8"),
-    "/startup-config.js": (args.startup_config, "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf.js": ("node_modules/mupdf/dist/mupdf.js", "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf-wasm.js": ("node_modules/mupdf/dist/mupdf-wasm.js", "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf-wasm.wasm": ("node_modules/mupdf/dist/mupdf-wasm.wasm", "application/wasm"),
+    "/": (load_file("ephyprompt.html"), "text/html; charset=utf-8"),
+    "/ephyprompt.html": (load_file("ephyprompt.html"), "text/html; charset=utf-8"),
+    "/favicon.ico": (load_file("favicon.ico"), "image/x-icon"),
+    "/style.css": (load_file("style.css"), "text/css; charset=utf-8"),
+    "/model-discovery.js": (load_file("model-discovery.js"), "application/javascript; charset=utf-8"),
+    "/pdf-rasterize.js": (load_file("pdf-rasterize.js"), "application/javascript; charset=utf-8"),
+    "/app.js": (load_file("app.js"), "application/javascript; charset=utf-8"),
+    "/startup-config.js": (load_file(args.startup_config), "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf.js": (load_file("node_modules/mupdf/dist/mupdf.js"), "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf-wasm.js": (load_file("node_modules/mupdf/dist/mupdf-wasm.js"), "application/javascript; charset=utf-8"),
+    "/node_modules/mupdf/dist/mupdf-wasm.wasm": (load_file("node_modules/mupdf/dist/mupdf-wasm.wasm"), "application/wasm"),
 }
 
 def summarize_payload(payload, raw_body):
@@ -84,25 +92,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_api_headers()
         self.end_headers()
 
-    def serve_static(self, filename, content_type):
-        file_path = os.path.join(BASE_DIR, filename)
-        if not os.path.isfile(file_path):
-            self.send_error(404, f"{filename} not found")
-            return
-        try:
-            with open(file_path, "rb") as fh:
-                body = fh.read()
-        except OSError as e:
-            print(f"Unable to read {filename}: {e}")
-            self.send_error(500, f"Unable to read {filename}")
-            return
-
+    def serve_static(self, content, content_type):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Length", str(len(content)))
         self.send_csp()
         self.end_headers()
-        self.wfile.write(body)
+        self.wfile.write(content)
 
     def do_GET(self):
         path = self.path
@@ -121,8 +117,8 @@ class Handler(BaseHTTPRequestHandler):
         if entry is None:
             self.send_error(404, "Not Found")
             return
-        filename, content_type = entry
-        self.serve_static(filename, content_type )
+        content, content_type = entry
+        self.serve_static(content, content_type )
 
     def do_POST(self):
         if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin requests only.
