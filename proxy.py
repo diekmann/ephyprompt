@@ -173,7 +173,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 while True:
                     print(".", end="", flush=True)
-                    chunk = resp.read(128) # roughly the size of a SSE data: line.
+                    chunk = resp.read1(65536)
                     if not chunk:
                         print()
                         break
