@@ -105,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        path = self.path.split("?", 1)[0]
+        path = self.path
         if path in ("/v1/model/info", "/v1/models"):
             self.fwd_request(urllib.request.Request(
                     API_URL + path,
