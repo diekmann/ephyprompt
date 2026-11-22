@@ -263,6 +263,24 @@ function fileToDataUrl(file) {
   });
 }
 
+let pdfRasterizeWorker = null; // Lazy loading.
+const trustedTypesPolicy = trustedTypes.createPolicy("pdf-worker", { createScriptURL: (url) => "pdf-rasterize-worker.js" });
+async function rasterizePDFInWorker(arrayBuffer, filename, width) {
+  if (!pdfRasterizeWorker) {
+    pdfRasterizeWorker = new Worker(trustedTypesPolicy.createScriptURL(""), { type: "module" });
+    await new Promise((resolve, reject) => {
+      pdfRasterizeWorker.onmessage = () => resolve();
+      pdfRasterizeWorker.onerror = (e) => reject(new Error(`PDF worker failed: ${e.message}`));
+    });
+    console.log("[ephyprompt]", "pdfRasterizeWorker ready")
+  }
+  return new Promise((resolve, reject) => {
+    pdfRasterizeWorker.onmessage = ({ data }) => resolve(data);
+    pdfRasterizeWorker.onerror = (error) => reject(new Error(`PDF worker failed: ${error.message}`));
+    pdfRasterizeWorker.postMessage({ arrayBuffer, filename, width }, [arrayBuffer]);
+  });
+}
+
 async function handlePdfSelected(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -280,14 +298,12 @@ async function handlePdfSelected(event) {
 
 
   try {
-    console.log("Lazily oading mupdf.js and WASM which may take a while");
-    const { rasterizePDF } = await import("./pdf-rasterize.js");
-
     console.log("[ephyprompt]", "PDF rasterization. Width:", elements.pdfWidth.value, "Filename:", file.name);
-    const pdfAsDataURLs = rasterizePDF(await file.arrayBuffer(), file.name, elements.pdfWidth.value)
-    const pages = Array.isArray(pdfAsDataURLs?.pages) ? pdfAsDataURLs.pages : [];
+    const pdfAsDataURLs = await rasterizePDFInWorker(await file.arrayBuffer(), file.name, elements.pdfWidth.value)
+    console.assert(Array.isArray(pdfAsDataURLs.pages), typeof(pdfAsDataURLs.pages))
+    const pages = pdfAsDataURLs.pages;
     if (pages.length === 0) {
-      throw new Error("Proxy returned no pages");
+      throw new Error("rasterizePDFInWorker returned no pages");
     }
 
     imageAttachments.push(...pages);
@@ -298,6 +314,7 @@ async function handlePdfSelected(event) {
   } catch (error) {
     console.log("[ephyprompt]", "PDF rasterization failed", { error: error.message });
     alert(`Failed to rasterize PDF: ${error.message}`);
+    setPdfStatus(`failed`, false);
   } finally {
     elements.pdfAttachments.value = "";
     elements.pdfAttachments.disabled = false;

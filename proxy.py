@@ -37,7 +37,7 @@ STATIC_FILES = {
     "/favicon.ico": (load_file("favicon.ico"), "image/x-icon"),
     "/style.css": (load_file("style.css"), "text/css; charset=utf-8"),
     "/model-discovery.js": (load_file("model-discovery.js"), "application/javascript; charset=utf-8"),
-    "/pdf-rasterize.js": (load_file("pdf-rasterize.js"), "application/javascript; charset=utf-8"),
+    "/pdf-rasterize-worker.js": (load_file("pdf-rasterize-worker.js"), "application/javascript; charset=utf-8"), # TODO: super strict CSP for this worker!
     "/app.js": (load_file("app.js"), "application/javascript; charset=utf-8"),
     "/startup-config.js": (load_file(args.startup_config), "application/javascript; charset=utf-8"),
     "/node_modules/mupdf/dist/mupdf.js": (load_file("node_modules/mupdf/dist/mupdf.js"), "application/javascript; charset=utf-8"),
@@ -67,7 +67,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_csp(self):
         """Main Content Security Policy for the main page."""
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types 'none';")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types pdf-worker;")
 
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
