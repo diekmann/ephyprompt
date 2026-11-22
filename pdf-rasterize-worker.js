@@ -12,7 +12,7 @@ self.postMessage("ready"); // race, because loading the mupdf wasm takes a while
 function rasterizePDF(fileBuffer, fileName, pngWidth) {
     const pdf = mupdf.Document.openDocument(fileBuffer, "application/pdf");
     try {
-        const fname = fileName.replace(/\.[^/.]+$/, "_") || "document";
+        const fname = fileName.replace(/\s/g, "_");
         const pages = [];
         const pageCount = pdf.countPages();
         const padding = String(pageCount).length;
@@ -25,23 +25,13 @@ function rasterizePDF(fileBuffer, fileName, pngWidth) {
                 const zoom = Number(pngWidth) / pageWidth;
 
                 const pix = page.toPixmap([zoom, 0, 0, zoom, 0, 0], mupdf.ColorSpace.DeviceRGB);
-
-                // TODO: is there a better base64 encoding?
                 const bytes = new Uint8Array(pix.asPNG());
-                let binary = "";
-                for (let i = 0; i < bytes.length; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                const base64 = btoa(binary);
-
-                const name = `${fname}-page-${String(index + 1).padStart(padding, "0")}.png`;
-                const dataUrl = `data:image/png;base64,${base64}`;
                 pages.push({
-                    name: name,
-                    url: dataUrl
+                    name: `${fname}-page-${String(index + 1).padStart(padding, "0")}.png`,
+                    url: `data:image/png;base64,${bytes.toBase64()}`
                 });
+                pix.destroy();
             } finally {
-                // TODO: pix.destroy()?
                 page.destroy();
             }
         }

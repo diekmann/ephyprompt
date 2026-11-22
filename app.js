@@ -270,7 +270,7 @@ async function rasterizePDFInWorker(arrayBuffer, filename, width) {
     pdfRasterizeWorker = new Worker(trustedTypesPolicy.createScriptURL(""), { type: "module" });
     await new Promise((resolve, reject) => {
       pdfRasterizeWorker.onmessage = () => resolve();
-      pdfRasterizeWorker.onerror = (e) => reject(new Error(`PDF worker failed: ${e.message}`));
+      pdfRasterizeWorker.onerror = (e) => reject(new Error(`PDF worker failed to load: ${e.error?.message ?? e.message}`));
     });
     console.log("[ephyprompt]", "pdfRasterizeWorker ready")
   }
