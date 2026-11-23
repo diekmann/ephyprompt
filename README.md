@@ -22,8 +22,13 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 ## Architecture
 
 * A single (HTML, CSS, Javascript) website serves as the complete user interface.
-* A tiny python webserver acts as proxy to send requests to the LLM provider. The API key is only exposed to this webserver.
+* A tiny python webserver acts as proxy to send requests to the LLM provider.
+  * It hardens the app by setting the strictest Content Security Policy.
+  * The API key is only exposed to this webserver.
 * PDF rasterization is happening in the browser, because the browser is probably the world's most supported and portable sandbox for easily processing untrusted documents.
+* No useless abstractions: The main application state is basically a global `messages` array, which holds raw openai `/v1/chat/completions` messages where the content is always a typed `ArrayOfContentPart`.
+  * Typed, e.g., `[ {"role": "user", "content": [{"type": "text", "text": "Was geht?"}]} ]`, but not `[ {"role": "user", "content": "Was geht?"} ]`
+  * So we can also cleanly attach and render files and images.
 
 ## Properties
 
