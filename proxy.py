@@ -32,7 +32,7 @@ def load_file(filename: str) -> bytes:
         return fh.read()
 
 CSP_MAIN = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types pdf-worker;"
-CSP_RESTRICTED = "default-src 'none'; sandbox; frame-ancestors 'none'; form-action 'none'; base-uri 'none'; require-trusted-types-for 'script'; trusted-types 'none';"
+CSP_RESTRICTED = "default-src 'none'; frame-ancestors 'none'; sandbox;"
 CSP_WORKER = "default-src 'none'; connect-src 'self'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'; require-trusted-types-for 'script'; trusted-types 'none';"
 
 STATIC_FILES = {
@@ -72,7 +72,7 @@ class Handler(BaseHTTPRequestHandler):
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox;")
+        self.send_header("Content-Security-Policy", CSP_RESTRICTED)
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
         self.send_header("Referrer-Policy", "no-referrer")
 
