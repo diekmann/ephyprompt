@@ -31,18 +31,22 @@ def load_file(filename: str) -> bytes:
     with open(file_path, "rb") as fh:
         return fh.read()
 
+CSP_MAIN = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types pdf-worker;"
+CSP_RESTRICTED = "default-src 'none'; frame-ancestors 'none'; sandbox;"
+CSP_WORKER = "default-src 'none'; connect-src 'self'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'; require-trusted-types-for 'script'; trusted-types 'none';"
+
 STATIC_FILES = {
-    "/": (load_file("ephyprompt.html"), "text/html; charset=utf-8"),
-    "/ephyprompt.html": (load_file("ephyprompt.html"), "text/html; charset=utf-8"),
-    "/favicon.ico": (load_file("favicon.ico"), "image/x-icon"),
-    "/style.css": (load_file("style.css"), "text/css; charset=utf-8"),
-    "/model-discovery.js": (load_file("model-discovery.js"), "application/javascript; charset=utf-8"),
-    "/pdf-rasterize.js": (load_file("pdf-rasterize.js"), "application/javascript; charset=utf-8"),
-    "/app.js": (load_file("app.js"), "application/javascript; charset=utf-8"),
-    "/startup-config.js": (load_file(args.startup_config), "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf.js": (load_file("node_modules/mupdf/dist/mupdf.js"), "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf-wasm.js": (load_file("node_modules/mupdf/dist/mupdf-wasm.js"), "application/javascript; charset=utf-8"),
-    "/node_modules/mupdf/dist/mupdf-wasm.wasm": (load_file("node_modules/mupdf/dist/mupdf-wasm.wasm"), "application/wasm"),
+    "/": (load_file("ephyprompt.html"), "text/html; charset=utf-8", CSP_MAIN),
+    "/ephyprompt.html": (load_file("ephyprompt.html"), "text/html; charset=utf-8", CSP_MAIN),
+    "/favicon.ico": (load_file("favicon.ico"), "image/x-icon", CSP_RESTRICTED),
+    "/style.css": (load_file("style.css"), "text/css; charset=utf-8", CSP_RESTRICTED),
+    "/model-discovery.js": (load_file("model-discovery.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/pdf-rasterize-worker.js": (load_file("pdf-rasterize-worker.js"), "application/javascript; charset=utf-8", CSP_WORKER),
+    "/app.js": (load_file("app.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/startup-config.js": (load_file(args.startup_config), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/node_modules/mupdf/dist/mupdf.js": (load_file("node_modules/mupdf/dist/mupdf.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/node_modules/mupdf/dist/mupdf-wasm.js": (load_file("node_modules/mupdf/dist/mupdf-wasm.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/node_modules/mupdf/dist/mupdf-wasm.wasm": (load_file("node_modules/mupdf/dist/mupdf-wasm.wasm"), "application/wasm", CSP_RESTRICTED),
 }
 
 def summarize_payload(payload, raw_body):
@@ -65,14 +69,10 @@ def summarize_payload(payload, raw_body):
 
 class Handler(BaseHTTPRequestHandler):
 
-    def send_csp(self):
-        """Main Content Security Policy for the main page."""
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'none'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; require-trusted-types-for 'script'; trusted-types 'none';")
-
     def send_api_headers(self):
         """Strict headers with strict Content Security Policy for raw bytes API requests."""
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox;")
+        self.send_header("Content-Security-Policy", CSP_RESTRICTED)
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
         self.send_header("Referrer-Policy", "no-referrer")
 
@@ -107,11 +107,11 @@ class Handler(BaseHTTPRequestHandler):
         if entry is None:
             self.send_error(404, "Not Found")
             return
-        content, content_type = entry
+        content, content_type, content_security_policy = entry
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
-        self.send_csp()
+        self.send_header("Content-Security-Policy", content_security_policy)
         self.end_headers()
         self.wfile.write(content)
 
