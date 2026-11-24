@@ -300,7 +300,7 @@ async function handlePdfSelected(event) {
   try {
     console.log("[ephyprompt]", "PDF rasterization. Width:", elements.pdfWidth.value, "Filename:", file.name);
     const pdfAsDataURLs = await rasterizePDFInWorker(await file.arrayBuffer(), file.name, elements.pdfWidth.value)
-    console.assert(Array.isArray(pdfAsDataURLs.pages), typeof(pdfAsDataURLs.pages))
+    console.assert(Array.isArray(pdfAsDataURLs.pages), typeof (pdfAsDataURLs.pages))
     const pages = pdfAsDataURLs.pages;
     if (pages.length === 0) {
       throw new Error("rasterizePDFInWorker returned no pages");
@@ -467,7 +467,11 @@ async function send(event) {
 
     const reply = assistantText || "(no response)";
     updateAssistantBubble(assistantBubble, { content: reply, thinking: assistantThinking, loading: false });
-    messages.push({ role: "assistant", content: reply });
+    messages.push({
+      role: "assistant",
+      reasoning_content: assistantThinking,  // echo back the thinking, not all models seem to respect this.
+      content: [{ type: "text", text: reply }]
+    });
     console.log("[ephyprompt]", "Chat response completed");
   } catch (error) {
     let errMsg = `${assistantText} [ERROR] ERROR: ${error.message}`;
@@ -479,6 +483,7 @@ async function send(event) {
     setSendButtonReceiving(false);
     assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
   }
+  console.log(messages);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
