@@ -449,7 +449,6 @@ async function send(event) {
           console.warn("[ephyprompt]", "Stream did not finish normally", { finishReason });
         }
       }
-
       updateAssistantBubble(assistantBubble, { content: assistantText, thinking: assistantThinking, loading: true });
     }
 
@@ -518,7 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createInputBubble("user", message.content);
         break;
       case "assistant":
-        alert("Assistant prefill not supported.");
+        updateAssistantBubble(createAssistantBubble(), { content: message.content, thinking: message.reasoning_content, loading: false });
         break;
     }
   }
