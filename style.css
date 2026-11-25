@@ -102,13 +102,7 @@ button {
     position: absolute;
     top: 100%;
     z-index: 1000;
-}
-.attachment-chip.right img {
     right: 0;
-}
-
-.attachment-chip.left img {
-    left: 0;
 }
 .attachment-chip:hover img {
     display: block;

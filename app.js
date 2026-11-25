@@ -7,9 +7,7 @@ const elements = {
   modelInfo: document.getElementById("model-info"),
   thinking: document.getElementById("thinking"),
   textAttachments: document.getElementById("text-attachments"),
-  textSelection: document.getElementById("text-selection"),
   imageAttachments: document.getElementById("image-attachments"),
-  imageSelection: document.getElementById("image-selection"),
   pdfAttachments: document.getElementById("pdf-attachments"),
   pdfStatus: document.getElementById("pdf-status"),
   pdfWidth: document.getElementById("pdf-width"),
@@ -42,9 +40,9 @@ function updateModelControls() {
 
 
 let messages = [];
+let pendingContent = []; // content that has been added but not yet sent.
+
 let activeRequest = null;
-let textAttachments = []; // { name, content } pairs;
-let imageAttachments = []; // { name, url } pairs; url is always a data URL
 
 function withHiddenMetadata(obj) {
   Object.defineProperty(obj, "_hidden_only_render_abbreviated", {
@@ -86,7 +84,7 @@ function createInputBubble(role, content) {
         break;
       }
       case item.type == "image_url": {
-        const link = imagePreviewLink(item.image_url.url, "🖼️ View image", "right");
+        const link = imagePreviewLink(item.image_url.url, "🖼️ View image");
         body.appendChild(link);
         break;
       }
@@ -99,12 +97,12 @@ function createInputBubble(role, content) {
 }
 
 // browsers don't like navigating to data URLs, so also show the image in-place.
-function imagePreviewLink(dataUrlImage, text, imagePopupSide) {
+function imagePreviewLink(dataUrlImage, text) {
   const link = document.createElement("a");
   link.href = dataUrlImage;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.className = `attachment-chip ${imagePopupSide}`;
+  link.className = `attachment-chip`;
   link.textContent = text;
 
   const img = document.createElement("img");
@@ -180,68 +178,54 @@ function updateAssistantBubble(assistantBubble, { content, thinking, loading }) 
   assistantBubble.copyBtn.classList.toggle("visible", hasContent);
 }
 
-function updateTextSelectionSummary() {
-  if (textAttachments.length === 0) {
-    elements.textSelection.hidden = true;
-    return;
-  }
-
-  elements.textSelection.hidden = false;
-  elements.textSelection.replaceChildren();
-
-  textAttachments.forEach((attachment, index) => {
-    if (index > 0) {
-      elements.textSelection.appendChild(document.createTextNode(", "));
-    }
-    const chip = document.createElement("div");
-    chip.className = `attachment-chip`;
-    chip.textContent = `📄 ${attachment.name}`;
-
-    elements.textSelection.appendChild(chip);
-  });
-}
-
-function updateImageSelectionSummary() {
-  if (imageAttachments.length === 0) {
-    elements.imageSelection.hidden = true;
-    return;
-  }
-
-  elements.imageSelection.hidden = false;
-  elements.imageSelection.replaceChildren();
-
-  imageAttachments.forEach((attachment, index) => {
-    if (index > 0) {
-      elements.imageSelection.appendChild(document.createTextNode(", "));
-    }
-    elements.imageSelection.appendChild(imagePreviewLink(attachment.url, `🖼️ ${attachment.name}`, "left"));
-  });
-}
 
 // The file picker is just an import control: read the files once, append, reset.
 async function handleTextSelected() {
   const files = Array.from(elements.textAttachments.files || []);
   const picked = await Promise.all(files.map(async (file) => ({ name: file.name, content: await file.text() }))); // may contain gibberish on non-text files.
-  textAttachments.push(...picked);
+  const content = [];
+  for (const attachment of picked) {
+    content.push({
+      type: "text",
+      text: `Filename: ${attachment.name}`
+    });
+    content.push(withHiddenMetadata({
+      type: "text",
+      text: attachment.content
+    }));
+  }
+  createInputBubble("user", content);
+  pendingContent.push(...content);
   elements.textAttachments.value = "";
-  updateTextSelectionSummary();
 }
 
 async function handleImagesSelected() {
   const files = Array.from(elements.imageAttachments.files || []);
   const picked = await Promise.all(files.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
-  imageAttachments.push(...picked);
+  addImagesToPendingContent(picked);
   elements.imageAttachments.value = "";
-  updateImageSelectionSummary();
+}
+
+function addImagesToPendingContent(nameDataURLPairs) {
+  const content = [];
+  for (const attachment of nameDataURLPairs) {
+    content.push({
+      type: "text",
+      text: `Filename: ${attachment.name}`
+    });
+    content.push({
+      type: "image_url",
+      image_url: { url: attachment.url }
+    });
+  }
+  createInputBubble("user", content);
+  pendingContent.push(...content);
 }
 
 function clearSelectedAttachments() {
   elements.textAttachments.value = "";
-  textAttachments = [];
-  updateTextSelectionSummary();
   elements.imageAttachments.value = "";
-  imageAttachments = [];
-  updateImageSelectionSummary();
+  elements.pdfAttachments.value = "";
 }
 
 function setPdfStatus(text, loading = false) {
@@ -306,8 +290,7 @@ async function handlePdfSelected(event) {
       throw new Error("rasterizePDFInWorker returned no pages");
     }
 
-    imageAttachments.push(...pages);
-    updateImageSelectionSummary();
+    addImagesToPendingContent(pages);
 
     setPdfStatus(`Added ${pages.length} page${pages.length === 1 ? "" : "s"} from ${file.name} (at ${elements.pdfWidth.value} px)`);
     console.log("[ephyprompt]", "PDF rasterized", { filename: file.name, pageCount: pages.length });
@@ -361,45 +344,20 @@ async function send(event) {
 
   const text = elements.input.value.trim();
   const model = elements.model.value;
-  const modelConfig = MODEL_OPTIONS.find((entry) => entry.id === model);
 
-  if (imageAttachments.length > 0 && !modelConfig?.supportsImages) {
-    alert("The selected model does not support image uploads.");
-    return;
-  }
-
-  const content = [];
+  const textContent = [];
   if (text) {
-    content.push({ type: "text", text });
+    textContent.push({ type: "text", text });
   }
+  createInputBubble("user", textContent);
+  pendingContent.push(...textContent);
 
-  for (const attachment of textAttachments) {
-    content.push({
-      type: "text",
-      text: `Filename: ${attachment.name}`
-    });
-    content.push(withHiddenMetadata({
-      type: "text",
-      text: attachment.content
-    }));
-  }
+  messages.push({ role: "user", content: [...pendingContent] });
+  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length });
 
-  for (const attachment of imageAttachments) {
-    content.push({
-      type: "text",
-      text: `Filename: ${attachment.name}`
-    });
-    content.push({
-      type: "image_url",
-      image_url: { url: attachment.url }
-    });
-  }
-
-  messages.push({ role: "user", content });
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length, textAttachmentCount: textAttachments.length, imageCount: imageAttachments.length });
+  pendingContent.length = 0;
   elements.input.value = "";
   clearSelectedAttachments();
-  createInputBubble("user", content);
 
 
   const assistantBubble = createAssistantBubble();
@@ -479,6 +437,7 @@ async function send(event) {
     setSendButtonReceiving(false);
     assistantBubble.bubble.scrollIntoView({ behavior: "auto", block: "end" });
   }
+  console.log(messages);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
