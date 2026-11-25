@@ -342,18 +342,15 @@ async function send(event) {
     return;
   }
 
-  const text = elements.input.value.trim();
-  const model = elements.model.value;
-
-  const textContent = [];
-  if (text) {
-    textContent.push({ type: "text", text });
-  }
+  const textContent = [{
+    type: "text",
+    text: elements.input.value.trim()
+  }];
   createInputBubble("user", textContent);
   pendingContent.push(...textContent);
 
   messages.push({ role: "user", content: [...pendingContent] });
-  console.log("[ephyprompt]", "Sending chat request", { model, messageCount: messages.length });
+  console.log("[ephyprompt]", "Sending chat request", { model: elements.model.value, messageCount: messages.length });
 
   pendingContent.length = 0;
   elements.input.value = "";
@@ -373,7 +370,7 @@ async function send(event) {
       signal: activeRequest.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify({
-        model,
+        model: elements.model.value,
         messages: messages,
         stream: true,
         chat_template_kwargs: { enable_thinking: elements.thinking.checked, thinking: elements.thinking.checked }

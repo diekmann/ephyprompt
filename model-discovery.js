@@ -66,7 +66,7 @@ export async function loadModelOptions() {
   MODEL_OPTIONS = MODEL_OPTIONS.filter(model => {
     const modelInfo = models.get(model.id);
     if (!modelInfo || modelInfo.mode !== "chat") {
-      console.log(`[model-discovery] Filtering out model: ${model.id}`, modelInfo ?? "(No model info available)");
+      console.log(`[model-discovery] Filtering out non-chat model: ${model.id}`, modelInfo ?? "(No model info available)");
       return false;
     }
     return true;
