@@ -27,7 +27,7 @@ print(f"Startup config file: {args.startup_config}")
 def load_file(filename: str) -> bytes:
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
     if not os.path.isfile(file_path):
-        raise RuntimeErro(f"{filename} not found")
+        raise RuntimeError(f"{filename} not found")
     with open(file_path, "rb") as fh:
         return fh.read()
 
