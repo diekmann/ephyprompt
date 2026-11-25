@@ -63,7 +63,7 @@ def summarize_payload(payload, raw_body):
                 if isinstance(p, dict)
             ),
         },
-        "bytes": len(raw_body),
+        "Mbytes": len(raw_body)/1024/104,
     }
 
 
@@ -118,7 +118,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.headers.get("Sec-Fetch-Site") != "same-origin":  # CORS: same-origin requests only.
             self.send_error(403, "Refusing non-local request")
-            raise RuntimeError("Received non-local request. This is unexpected usage.")
+            return
         path = self.path
 
         if path != "/v1/chat/completions":
