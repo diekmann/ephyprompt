@@ -93,8 +93,6 @@ button {
     line-height: 0.8;
     width: fit-content;
     max-width: 100%;
-}
-.attachment-chip {
     position: relative;
 }
 .attachment-chip img {

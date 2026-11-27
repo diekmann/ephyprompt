@@ -310,7 +310,7 @@ function setSendButtonReceiving(receiving) {
   elements.send.textContent = receiving ? "Stop" : "Send";
 }
 
-export async function send(event) {
+async function send(event) {
   event?.preventDefault();
   if (activeRequest) {
     activeRequest.abort();

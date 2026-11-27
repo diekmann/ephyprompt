@@ -51,6 +51,7 @@ export async function loadModelOptions() {
 
   const models = new Map();
   try {
+    // TODO: /v1/model/info should be enough, no need for /v1/models call.
     for (const entry of await fetchJsonArray("/v1/model/info")) { // model_name can appear more than once; keep the first entry per name.
       if (entry?.model_name && !models.has(entry.model_name)) {
         models.set(entry.model_name, entry.model_info ?? {});
