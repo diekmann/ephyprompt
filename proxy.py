@@ -41,6 +41,7 @@ STATIC_FILES = {
     "/favicon.ico": (load_file("favicon.ico"), "image/x-icon", CSP_RESTRICTED),
     "/style.css": (load_file("style.css"), "text/css; charset=utf-8", CSP_RESTRICTED),
     "/model-discovery.js": (load_file("model-discovery.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
+    "/llm-api.js": (load_file("llm-api.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
     "/pdf-rasterize-worker.js": (load_file("pdf-rasterize-worker.js"), "application/javascript; charset=utf-8", CSP_WORKER),
     "/app.js": (load_file("app.js"), "application/javascript; charset=utf-8", CSP_RESTRICTED),
     "/startup-config.js": (load_file(args.startup_config), "application/javascript; charset=utf-8", CSP_RESTRICTED),

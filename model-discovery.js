@@ -1,6 +1,5 @@
 "use strict";
 
-
 // Fallback while /v1/models is loading, and in case it cannot be fetched at all.
 export let MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek/deepseek-v4.1-flash Loading…", supportsImages: true },
