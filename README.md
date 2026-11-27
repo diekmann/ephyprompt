@@ -14,7 +14,7 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 
 1. I can hard-code my OpenAI-compatible baseURL, (e.g., `TENSORX_URL = "https://api.tensorx.ai/v1/chat/completions"`), and pass my API key (e.g., `OPENAI_API_KEY=sk-XXX`) and start chatting. Currently hard-coded for tensorx.ai, Also tested (once) on OpenRouter.
 2. I can chat with the LLM API in the web UI via the streaming chat interface.
-3. I can attach images, which are sent to the LLM API. The images and files are uploaded from my computer and sent directly to the LLM API as part of the prompt; they never leave your machine except to your LLM API in the current chat session.
+3. I can attach images, which are sent to the LLM API. The images and files are uploaded from my computer and sent directly to the LLM API as part of the prompt; they never leave my machine, except to the LLM API in the current chat session.
 4. I can attach even weird PDFs or scans, which get sent to the LLM as _images_.
 5. I can use EphyPrompt completely locally. No external resources are loaded (no CDNs, fonts, or telemetry); the only network access is to the LLM API.
 6. My complete chat history and uploads are preserved for the current chat session; but all is cleared once I reload the page.
@@ -23,9 +23,10 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 
 * A single (HTML, CSS, Javascript) website serves as the complete user interface.
 * A tiny python webserver acts as proxy to send requests to the LLM provider.
-  * It hardens the app by setting the strictest Content Security Policy.
+  * It hardens the app by setting the strictest Content Security Policy (CSP).
   * The API key is only exposed to this webserver.
 * PDF rasterization is happening in the browser, because the browser is probably the world's most supported and portable sandbox for easily processing untrusted documents.
+  * The big third-pirty PDF rasterization happens in an isolated web worker with an extra strict CSP.
 * No useless abstractions: The main application state is basically a global `messages` array, which holds raw openai `/v1/chat/completions` messages where the content is always a typed `ArrayOfContentPart`.
   * Typed, e.g., `[ {"role": "user", "content": [{"type": "text", "text": "Was geht?"}]} ]`, but not `[ {"role": "user", "content": "Was geht?"} ]`
   * So we can also cleanly attach and render files and images.
@@ -35,9 +36,10 @@ With a vision model, it can handle images and whole PDFs (via brute-force, rende
 * If the external LLM provider has good privacy and does not retain any data, EphyPrompt is 100% private and retains 0 data.
 * EphyPrompt is one single-page website. And a tiny local proxy due to CORS restrictions and to set a Content Security Policy.
 * EphyPrompt relies on a minimal set of external modules (only `mupdf.js`) and does not include external data. This makes it extremely easy to audit.
-* EphyPrompt can be easily run on common client operating systems.
+* EphyPrompt can be easily run on common client operating systems. Tested on Linux and Windows.
 * Data entered into EphyPrompt is only sent to your LLM API; it otherwise never leaves EphyPrompt.
 * Metadata is only logged locally in the local proxy to STDOUT and to the JavaScript console. Never explicitly persisted or stored.
+* The coding style is minimal and explicit. Simplicity is quality.
 
 ## Known Issues
 
@@ -59,7 +61,7 @@ podman run --rm -it --network host --security-opt no-new-privileges --cap-drop=a
 
 The `--network host` is deliberate, since native EphyPrompt binds only to localhost.
 
-Also runs on Windows or any other OS with python3 installed.
+Also runs on Windows or any other OS with python3 installed, just run `OPENAI_API_KEY=XXX python3 proxy.py`
 
 ## Development
 
@@ -67,4 +69,4 @@ Also runs on Windows or any other OS with python3 installed.
 npm install mupdf
 ```
 
-Required files checked into the repo for convenience, so you don't need `npm`.
+The minimal set of required mupdf files are also checked into the repo for convenience, so you don't need `npm` to just use it.
