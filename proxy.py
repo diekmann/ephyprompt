@@ -64,7 +64,7 @@ def summarize_payload(payload, raw_body):
                 if isinstance(p, dict)
             ),
         },
-        "Mbytes": len(raw_body)/1024/104,
+        "Mbytes": len(raw_body)/1024/1024,
     }
 
 

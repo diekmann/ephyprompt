@@ -67,10 +67,8 @@ export async function llmChat({ model, abortSignal, messages, thinkingEnabled, u
     });
     console.log("[llmapi]", "Chat response completed");
   } catch (error) {
-    let errMsg = `${assistantText} [ERROR] ERROR: ${error.message}`;
-    updateUI({ content: errMsg, thinking: assistantThinking, loading: false });
-    messages.push({ role: "assistant", content: errMsg });
-    console.log("[llmapi]", "Chat response failed");
+    updateUI({ content: `${assistantText} [ERROR] ERROR: ${error.message}`, thinking: assistantThinking, loading: false });
+    console.warn("[llmapi]", "Chat response failed");
   }
 }
 

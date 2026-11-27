@@ -1,7 +1,7 @@
 "use strict";
 
 // Fallback while /v1/models is loading, and in case it cannot be fetched at all.
-export let MODEL_OPTIONS = [
+export const MODEL_OPTIONS = [
   { id: "deepseek/deepseek-v4.1-flash", label: "deepseek/deepseek-v4.1-flash Loading…", supportsImages: true },
 ];
 
@@ -37,7 +37,7 @@ async function loadModels() {
       console.warn("[model-discovery]", "/v1/models returned no models; keeping fallback options");
       return;
     }
-    MODEL_OPTIONS.length = 0; // Replace contents in place so the already-imported array reference stays valid.
+    MODEL_OPTIONS.length = 0;
     MODEL_OPTIONS.push(...models);
     console.log("[model-discovery]", "Models loaded", { modelCount: models.length });
   } catch (error) {
@@ -62,14 +62,16 @@ export async function loadModelOptions() {
     alert(error);
   }
 
-  MODEL_OPTIONS = MODEL_OPTIONS.filter(model => {
+  const kept = MODEL_OPTIONS.filter(model => {
     const modelInfo = models.get(model.id);
-    if (!modelInfo || modelInfo.mode !== "chat") {
+    if (modelInfo?.mode !== "chat") {
       console.log(`[model-discovery] Filtering out non-chat model: ${model.id}`, modelInfo ?? "(No model info available)");
       return false;
     }
     return true;
   });
+  MODEL_OPTIONS.length = 0;
+  MODEL_OPTIONS.push(...kept);
 
   for (const model of MODEL_OPTIONS) {
     const modelInfo = models.get(model.id);

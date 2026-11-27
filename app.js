@@ -331,7 +331,6 @@ export async function send(event) {
   elements.input.value = "";
   clearSelectedAttachments();
 
-
   const assistantBubble = createAssistantBubble();
 
   activeRequest = new AbortController();
